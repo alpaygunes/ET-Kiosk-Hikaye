@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yaparız Başarırız - Kiosk Hikaye Akışı</title>
+  <meta name="description" content="Yaparız Başarırız Kiosk moduna uygun tam ekran interaktif hikaye izleme arayüzü.">
+  
+  <!-- Google Fonts: Outfit (headings) and Inter (body text) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Reset & Base Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      background-color: #04060d;
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: stretch;
+      justify-content: stretch;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    /* Immersive Blurred Ambient Background (Fills screen, avoids black bars) */
+    .ambient-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-size: cover;
+      background-position: center;
+      filter: blur(50px) brightness(0.3) saturate(1.2);
+      transform: scale(1.15);
+      z-index: 0;
+      transition: background-image 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      background-color: #04060d;
+    }
+    
+    /* Global SVG definitions holder */
+    .svg-defs {
+      position: absolute;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+    }
+    
+    /* Main Layout Card (Now fills the entire screen for Kiosk Mode) */
+    .viewer-card {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Full Screen Image Area Container */
+    .image-area {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      overflow: hidden;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* Center the story image, contain to screen height/width to prevent content cropping */
+    .story-image {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      z-index: 2;
+      transition: opacity 0.5s ease;
+      opacity: 0;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+    
+    .story-image.loaded {
+      opacity: 1;
+    }
+    
+    /* Preloader Spinner */
+    .image-preloader {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #04060d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      transition: opacity 0.3s ease;
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #10b981;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Tap Targets (For easy navigation by tapping left/right sides of image) */
+    .tap-target {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 25%;
+      z-index: 12;
+      cursor: pointer;
+    }
+    
+    .tap-left {
+      left: 0;
+    }
+    
+    .tap-right {
+      right: 0;
+    }
+    
+    /* Top Linear Progress Segments (Instagram Style) */
+    .progress-segments {
+      position: absolute;
+      top: 20px;
+      left: 40px;
+      right: 40px;
+      display: flex;
+      gap: 10px;
+      z-index: 100;
+    }
+    
+    .progress-segment {
+      flex: 1;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .progress-segment-fill {
+      width: 0%;
+      height: 100%;
+      background: #10b981; /* Emerald Green */
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
+    }
+    
+    /* Navigation Dots Header (Floats at the top) */
+    .nav-header {
+      position: absolute;
+      top: 38px;
+      left: 40px;
+      right: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 95;
+    }
+    
+    .nav-dots {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* Circular Story Button */
+    .story-dot {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.6);
+      border: none;
+      outline: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.3s ease;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .story-dot:hover {
+      transform: scale(1.12);
+      background: rgba(15, 23, 42, 0.8);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    
+    .story-dot.active {
+      background: rgba(15, 23, 42, 0.9);
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    .dot-inner {
+      width: 138px;
+      height: 138px;
+      border-radius: 50%;
+      background: rgba(10, 15, 30, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      z-index: 2;
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    
+    .story-dot.active .dot-inner {
+      background: rgba(10, 15, 30, 0.9);
+      transform: scale(0.95);
+    }
+    
+    .dot-inner img {
+      width: 196px;
+      height: 196px;
+      object-fit: contain;
+      z-index: 3;
+      transition: transform 0.3s ease;
+    }
+    
+    .story-dot.active .dot-inner img {
+      transform: scale(0.9);
+    }
+    
+    /* Progress SVG Circle */
+    .progress-ring {
+      position: absolute;
+      top: -6px;
+      left: -6px;
+      width: 162px;
+      height: 162px;
+      transform: rotate(-90deg);
+      pointer-events: none;
+      z-index: 1;
+    }
+    
+    .progress-ring__bg {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.08);
+      stroke-width: 2.5px;
+    }
+    
+    .progress-ring__circle {
+      fill: none;
+      stroke: url(#ringGradient);
+      stroke-width: 3px;
+      stroke-linecap: round;
+      stroke-dasharray: 452; /* 2 * PI * r (r=72) */
+      stroke-dashoffset: 452;
+    }
+    
+    /* Tooltip */
+    .dot-tooltip {
+      position: absolute;
+      bottom: -32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(5px);
+      background: rgba(10, 12, 22, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #ffffff;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+    
+    .story-dot:hover .dot-tooltip {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    
+    /* Floating Exit Button (Top Right) */
+    .exit-btn {
+      position: absolute;
+      right: 40px;
+      top: 38px;
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      z-index: 110;
+    }
+    
+    .exit-btn:hover {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: rgba(239, 68, 68, 0.5);
+      color: #ef4444;
+      transform: scale(1.08);
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.25);
+    }
+    
+    /* Right Floating Glassmorphic Content Card (On top of Image) */
+    .content-area {
+      position: absolute;
+      right: 40px;
+      top: 130px;
+      bottom: 40px;
+      width: 440px;
+      background: rgba(10, 15, 30, 0.62);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-radius: 28px;
+      padding: 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.65), 
+                  inset 0 1px 1px rgba(255, 255, 255, 0.15);
+      z-index: 50;
+      transition: all 0.5s ease;
+    }
+    
+    /* Neon corner indicator on the content card for extra premium detail */
+    .content-area::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 45px; height: 45px;
+      border-top: 3px solid #10b981;
+      border-right: 3px solid #10b981;
+      border-top-right-radius: 28px;
+      opacity: 0.45;
+      pointer-events: none;
+    }
+    
+    /* Glass card inner container animation on slide change */
+    .content-card-inner {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      justify-content: space-between;
+    }
+    
+    .story-body {
+      opacity: 1;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+    }
+    
+    .story-body.switching {
+      opacity: 0;
+      transform: translateY(15px);
+    }
+    
+    .badge-container {
+      margin-bottom: 24px;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 7px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #ffffff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: all 0.3s ease;
+    }
+    
+    /* Category specific colors */
+    .badge.duyuru {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      box-shadow: 0 4px 14px rgba(3, 105, 161, 0.4);
+    }
+    
+    .badge.haber {
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      box-shadow: 0 4px 14px rgba(109, 40, 217, 0.4);
+    }
+    
+    .badge.hatirlatma {
+      background: linear-gradient(135deg, #ea580c, #c2410c);
+      box-shadow: 0 4px 14px rgba(194, 65, 12, 0.4);
+    }
+    
+    .story-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 30px;
+      font-weight: 800;
+      line-height: 1.25;
+      letter-spacing: -0.5px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      background: linear-gradient(to bottom, #ffffff 60%, rgba(255, 255, 255, 0.8) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .story-text {
+      font-size: 16px;
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 400;
+      margin-bottom: 30px;
+    }
+    
+    /* Branding / Logo Section (Bottom Right of card) */
+    .branding-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      align-self: flex-end;
+      margin-top: auto;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 24px;
+      width: 100%;
+      justify-content: flex-end;
+    }
+    
+    .branding-text {
+      text-align: right;
+    }
+    
+    .branding-org {
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #ffffff;
+      text-transform: uppercase;
+    }
+    
+    .branding-sub {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 500;
+      margin-top: 3px;
+    }
+    
+    .branding-logo {
+      height: 44px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+      border-radius: 6px;
+    }
+    
+    /* Navigation Arrows (Float on sides of the Screen) */
+    .nav-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255, 255, 255, 0.7);
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 60;
+      outline: none;
+    }
+    
+    .nav-arrow:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.35);
+      color: #ffffff;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    }
+    
+    .nav-arrow:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+    
+    .nav-arrow-left {
+      left: 40px;
+    }
+    
+    .nav-arrow-right {
+      right: 40px;
+    }
+    
+    /* For Desktop: Position the right arrow to float cleanly on the left edge of the content area card */
+    @media (min-width: 801px) {
+      .nav-arrow-right {
+        right: 510px; 
+      }
+    }
+    
+    /* Floating Reaction Button (Bottom Left) */
+    .reaction-container {
+      position: absolute;
+      bottom: 40px;
+      left: 40px;
+      z-index: 60;
+    }
+    
+    .reaction-trigger-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #ef4444; /* Vivid red */
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.45);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+    }
+    
+    .reaction-trigger-btn:hover {
+      transform: scale(1.12);
+      background: #dc2626;
+      box-shadow: 0 10px 28px rgba(239, 68, 68, 0.6);
+    }
+    
+    .reaction-trigger-btn:active {
+      transform: scale(0.95);
+    }
+
+    .reaction-trigger-btn.pop-animate {
+      animation: buttonPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    @keyframes buttonPop {
+      0% { transform: scale(1); }
+      30% { transform: scale(0.8); }
+      100% { transform: scale(1); }
+    }
+    
+    .reaction-trigger-btn img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+    }
+    
+    /* Floating Reaction Selector Menu */
+    .reaction-menu {
+      position: absolute;
+      bottom: 70px;
+      left: 0;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 30px;
+      padding: 8px 16px;
+      display: flex;
+      gap: 16px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px) scale(0.85);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    .reaction-menu.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+    
+    .reaction-menu-item {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      outline: none;
+    }
+    
+    .reaction-menu-item:hover {
+      transform: scale(1.35) translateY(-4px);
+    }
+    
+    .reaction-menu-item img {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+    }
+    
+    /* Pause Hint Indicator Overlay */
+    .pause-overlay {
+      position: absolute;
+      top: 90px;
+      left: 40px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 100;
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 600;
+      backdrop-filter: blur(5px);
+    }
+    
+    .pause-overlay.visible {
+      opacity: 1;
+    }
+    
+    .pause-icon-dots {
+      display: flex;
+      gap: 4px;
+    }
+    
+    .pause-icon-dot {
+      width: 4px;
+      height: 12px;
+      background: #10b981;
+      border-radius: 1px;
+    }
+    
+    /* Sparkle decorations */
+    .sparkle {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      pointer-events: none;
+      z-index: 5;
+      opacity: 0.35;
+    }
+    .sparkle-br {
+      bottom: -12px;
+      right: -12px;
+    }
+    
+    /* Emoji reaction particle styling */
+    .reaction-particle {
+      position: absolute;
+      pointer-events: none;
+      z-index: 9999;
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      animation: floatUpFade 1.6s cubic-bezier(0.08, 0.8, 0.25, 1) forwards;
+    }
+    
+    @keyframes floatUpFade {
+      0% {
+        transform: translate3d(0, 0, 0) scale(0.4) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+        transform: translate3d(var(--x-mid), var(--y-mid), 0) scale(1.12) rotate(var(--rot-mid));
+      }
+      100% {
+        transform: translate3d(var(--x-end), var(--y-end), 0) scale(0.55) rotate(var(--rot-end));
+        opacity: 0;
+      }
+    }
+    
+    /* Closed/Exit Screen Overlay */
+    .closed-screen {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #04060d;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 26px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    .closed-screen.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    
+    .closed-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 40px;
+      font-weight: 800;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.6) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 0;
+      text-align: center;
+      letter-spacing: -0.5px;
+    }
+    
+    .closed-desc {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.6);
+      text-align: center;
+      max-width: 440px;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    
+    .closed-btn {
+      padding: 16px 36px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border: none;
+      outline: none;
+      color: white;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 16px;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.45);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    .closed-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 30px rgba(16, 185, 129, 0.6);
+    }
+    
+    .closed-btn:active {
+      transform: translateY(-1px);
+    }
+    
+    /* Responsive Styling (Mobile & Tablet Portrait Layout) */
+    @media (max-width: 800px) {
+      .progress-segments {
+        top: 14px;
+        left: 16px;
+        right: 16px;
+        gap: 6px;
+      }
+      
+      .nav-header {
+        top: 26px;
+        left: 16px;
+        right: 16px;
+      }
+      
+      .story-dot {
+        width: 150px;
+        height: 150px;
+      }
+      
+      .dot-inner {
+        width: 138px;
+        height: 138px;
+        font-size: 20px;
+        overflow: hidden;
+      }
+      
+      .dot-inner img {
+        width: 196px;
+        height: 196px;
+      }
+      
+      .progress-ring {
+        width: 162px;
+        height: 162px;
+        top: -6px;
+        left: -6px;
+      }
+      
+      .progress-ring__circle {
+        stroke-dasharray: 452; /* 2 * PI * 72 */
+        stroke-dashoffset: 452;
+      }
+      
+      .exit-btn {
+        top: 22px;
+        right: 16px;
+        width: 44px;
+        height: 44px;
+      }
+      
+      .nav-arrow {
+        display: none; /* Hide side arrows on mobile touchscreens */
+      }
+      
+      /* Slide bottom sheet overlay for small screens */
+      .content-area {
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: auto;
+        width: 100%;
+        max-height: 46%;
+        background: linear-gradient(to top, 
+          rgba(4, 6, 13, 0.98) 0%, 
+          rgba(4, 6, 13, 0.88) 60%, 
+          rgba(4, 6, 13, 0.4) 85%, 
+          transparent 100%
+        );
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px 24px 0 0;
+        padding: 32px 24px 44px 24px;
+      }
+      
+      .content-area::after {
+        border-top-right-radius: 24px;
+      }
+      
+      .story-title {
+        font-size: 22px;
+        margin-bottom: 14px;
+      }
+      
+      .story-text {
+        font-size: 14px;
+        margin-bottom: 20px;
+        line-height: 1.55;
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      
+      .branding-container {
+        padding-top: 16px;
+      }
+      
+      .reaction-container {
+        bottom: 16px;
+        left: 16px;
+      }
+      
+      .reaction-trigger-btn {
+        width: 48px;
+        height: 48px;
+      }
+      
+      .reaction-trigger-btn img {
+        width: 24px;
+        height: 24px;
+      }
+      
+      .reaction-menu {
+        bottom: 60px;
+      }
+      
+      .pause-overlay {
+        top: 85px;
+        left: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hidden SVG for global reusable gradients -->
+  <svg class="svg-defs">
+    <defs>
+      <!-- Circular progress bar gradient -->
+      <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#3b82f6" />    <!-- Blue -->
+        <stop offset="50%" stop-color="#10b981" />   <!-- Emerald Green -->
+        <stop offset="100%" stop-color="#8b5cf6" />  <!-- Purple -->
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <!-- Ambient background (changes blurred image in background) -->
+  <div class="ambient-bg" id="ambientBg"></div>
+
+  <!-- Primary Visual Kiosk Structure -->
+  <main class="viewer-card" id="viewerCard">
+    
+    <!-- Top Linear Progress Segments (Instagram-style) -->
+    <div class="progress-segments" id="progressSegments"></div>
+
+    <!-- Header containing Circular Dots Navigation & Exit Button -->
+    <header class="nav-header">
+      <div class="nav-dots" id="navDots"></div>
+      
+      <button class="exit-btn" id="exitBtn" aria-label="Hikayeyi Kapat" title="Kapat (ESC)">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Navigation Chevrons for Desktop Users -->
+    <button class="nav-arrow nav-arrow-left" id="prevBtn" aria-label="Önceki Hikaye" title="Önceki (Sol Yön Tuşu)">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+    
+    <button class="nav-arrow nav-arrow-right" id="nextBtn" aria-label="Sonraki Hikaye" title="Sonraki (Sağ Yön Tuşu)">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </button>
+
+    <!-- Center Slide Image Display -->
+    <section class="image-area" id="imageArea">
+      <div class="image-preloader" id="imagePreloader">
+        <div class="spinner"></div>
+      </div>
+      
+      <!-- Main Content Image -->
+      <img id="storyImage" class="story-image" src="" alt="Hikaye Görseli">
+      
+      <!-- Tap Navigators -->
+      <div class="tap-target tap-left" id="tapLeft"></div>
+      <div class="tap-target tap-right" id="tapRight"></div>
+      
+      <!-- Pause Notification Indicator -->
+      <div class="pause-overlay" id="pauseOverlay">
+        <div class="pause-icon-dots">
+          <div class="pause-icon-dot"></div>
+          <div class="pause-icon-dot"></div>
+        </div>
+        <span>Durduruldu</span>
+      </div>
+
+      <!-- Floating Reactions Component -->
+      <div class="reaction-container" id="reactionContainer">
+        <button class="reaction-trigger-btn" id="reactionTriggerBtn" aria-label="Tepki Gönder" title="Tepki Gönder">
+          <img src="assets/kupa.png" alt="Reaction Icon" id="activeReactionImg">
+        </button>
+        
+        <div class="reaction-menu" id="reactionMenu">
+          <button class="reaction-menu-item" data-reaction="kupa" title="Kupa (🏆)">
+            <img src="assets/kupa.png" alt="Kupa">
+          </button>
+          <button class="reaction-menu-item" data-reaction="kalp" title="Kalp (❤️)">
+            <img src="assets/kalp.png" alt="Kalp">
+          </button>
+          <button class="reaction-menu-item" data-reaction="begen" title="Beğen (👍)">
+            <img src="assets/begen.png" alt="Beğen">
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Floating Glassmorphic Details Card -->
+    <section class="content-area" id="contentArea">
+      <div class="content-card-inner">
+        <div class="story-body" id="storyBody">
+          <div class="badge-container">
+            <span class="badge" id="categoryBadge">DUYURU</span>
+          </div>
+          <h1 class="story-title" id="storyTitle">Yükleniyor...</h1>
+          <p class="story-text" id="storyText">İçerikler yüklenirken lütfen bekleyin.</p>
+        </div>
+
+        <!-- Bottom Organization Branding -->
+        <footer class="branding-container">
+          <div class="branding-text">
+            <div class="branding-org" id="brandingOrg">KAYSERİ İL MİLLİ EĞİTİM MÜDÜRLÜĞÜ</div>
+            <div class="branding-sub">AR-GE Eğitim Projeleri</div>
+          </div>
+          <img class="branding-logo" id="brandingLogo" src="assets/arge.png" alt="Logo">
+        </footer>
+      </div>
+      
+      <!-- Sparkle bottom-right decoration -->
+      <svg class="sparkle sparkle-br" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.2">
+        <path d="M12 3v18M3 12h18M12 3l3 4.5L12 12l-3-4.5zM12 12l3 4.5-3 4.5-3-4.5z" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </section>
+    
+  </main>
+
+  <!-- Kiosk Closed Screen Overlay -->
+  <div class="closed-screen" id="closedScreen">
+    <h2 class="closed-title">Akış Kapatıldı</h2>
+    <p class="closed-desc">Kiosk hikaye izleyicisi durduruldu. Akışı tekrar başlatmak için butona basabilirsiniz.</p>
+    <button class="closed-btn" id="restartBtn">Akışı Yeniden Başlat</button>
+  </div>
+
+  <!-- Interactive JavaScript -->
+  <script>
+    // Fallback data in case kaynak.json fetch fails due to CORS or local filesystem policy
+    const fallbackData = {
+          "icerikler": [
+                {
+                      "icerik_turu": "Duyuru",
+                      "resim_url": "04.jpg",
+                      "video_url": "",
+                      "baslik": "dddddddd",
+                      "metin": "ssss",
+                      "gosterim_suresi_sn": 5,
+                      "olusturma_tarihi": "2026-05-30T10:27:21",
+                      "gecerlilik_suresi_saat": 24
+                },
+                {
+                      "icerik_turu": "Duyuru",
+                      "resim_url": "03.jpg",
+                      "video_url": "",
+                      "baslik": "asdfads fasdfasd",
+                      "metin": "ssss adaasasdasd \n<H1>Bugün hava çok güzel. ☀️ Üstelik kod yazmayı çok seviyorum! 💻 Roket hızında öğreniyoruz: 🚀</h1>",
+                      "gosterim_suresi_sn": 5,
+                      "olusturma_tarihi": "2026-05-30T10:27:37",
+                      "gecerlilik_suresi_saat": 24
+                },
+                {
+                      "icerik_turu": "Duyuru",
+                      "resim_url": "05.jpg",
+                      "video_url": "",
+                      "baslik": "Başlık Ekleyin",
+                      "metin": "İçerik Metnini buraya yazın ",
+                      "gosterim_suresi_sn": 5,
+                      "olusturma_tarihi": "2026-05-30T11:20:16",
+                      "gecerlilik_suresi_saat": 24
+                }
+          ]
+    };
+
+    // Application State Variables
+    let stories = [];
+    let currentIdx = 0;
+    let isPaused = false;
+    let timerDuration = 5000;
+    let timerElapsed = 0;
+    let lastTime = 0;
+    let animationFrameId = null;
+    let isMobile = false;
+    
+    // DOM Elements Cache
+    const ambientBg = document.getElementById('ambientBg');
+    const storyImage = document.getElementById('storyImage');
+    const imagePreloader = document.getElementById('imagePreloader');
+    const categoryBadge = document.getElementById('categoryBadge');
+    const storyTitle = document.getElementById('storyTitle');
+    const storyText = document.getElementById('storyText');
+    const brandingOrg = document.getElementById('brandingOrg');
+    const brandingLogo = document.getElementById('brandingLogo');
+    const navDots = document.getElementById('navDots');
+    const progressSegments = document.getElementById('progressSegments');
+    const pauseOverlay = document.getElementById('pauseOverlay');
+    const storyBody = document.getElementById('storyBody');
+    
+    // Buttons
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const exitBtn = document.getElementById('exitBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const closedScreen = document.getElementById('closedScreen');
+    
+    // Tap Zones
+    const tapLeft = document.getElementById('tapLeft');
+    const tapRight = document.getElementById('tapRight');
+    const viewerCard = document.getElementById('viewerCard');
+    
+    // Reaction components
+    const reactionContainer = document.getElementById('reactionContainer');
+    const reactionTriggerBtn = document.getElementById('reactionTriggerBtn');
+    const reactionMenu = document.getElementById('reactionMenu');
+    const activeReactionImg = document.getElementById('activeReactionImg');
+
+    // Helper functions for content paths
+    function formatImagePath(path) {
+      if (!path) return '';
+      let formatted = path.startsWith('resimler/') ? path : 'resimler/' + path;
+      if (formatted.endsWith('.jpg') && !formatted.endsWith('.jpg.png')) {
+        formatted += '.png'; // Map JSON 01.jpg -> local resimler/01.jpg.png
+      }
+      return formatted;
+    }
+
+    function getCategoryIcon(type) {
+      if (!type) return 'assets/duyuru.png';
+      const normalized = type.toLowerCase()
+        .replace('ı','i').replace('ö','o').replace('ü','u').replace('ş','s').replace('ç','c').replace('ğ','g');
+      if (normalized === 'haber') return 'assets/haber.png';
+      if (normalized === 'duyuru') return 'assets/duyuru.png';
+      if (normalized === 'basari' || normalized === 'hatirlatma') return 'assets/basari.png';
+      return 'assets/duyuru.png';
+    }
+
+    // Helper function to robustly parse YYYY-MM-DDTHH:mm:ss as local date
+    function parseLocalDate(dateStr) {
+      if (!dateStr) return new Date(NaN);
+      const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2})$/);
+      if (match) {
+        return new Date(
+          parseInt(match[1], 10),
+          parseInt(match[2], 10) - 1, // Month is 0-indexed
+          parseInt(match[3], 10),
+          parseInt(match[4], 10),
+          parseInt(match[5], 10),
+          parseInt(match[6], 10)
+        );
+      }
+      return new Date(dateStr); // Fallback
+    }
+
+    // Filter out expired stories based on creation date and validity duration
+    function filterExpiredStories() {
+      const now = new Date();
+      stories = stories.filter(story => {
+        // If creation date is not set, treat as legacy, do not expire
+        if (!story.olusturma_tarihi) {
+          return true;
+        }
+        
+        const creationTime = parseLocalDate(story.olusturma_tarihi);
+        if (isNaN(creationTime.getTime())) {
+          return true; // Invalid date format, do not expire
+        }
+        
+        const validityHours = story.gecerlilik_suresi_saat;
+        if (validityHours === 0 || validityHours === undefined || validityHours === null) {
+          return true; // Sınırsız (Unlimited)
+        }
+        
+        // Expiration time is creation time + validity duration in hours
+        const expirationTime = new Date(creationTime.getTime() + validityHours * 60 * 60 * 1000);
+        return now < expirationTime;
+      });
+    }
+
+    // Display a beautiful overlay screen if there are no active/unexpired stories
+    function showEmptyState() {
+      isPaused = true;
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+      
+      // Update closed screen text to show empty state
+      const closedTitle = document.querySelector('.closed-title');
+      const closedDesc = document.querySelector('.closed-desc');
+      
+      closedTitle.textContent = "Aktif Hikaye Bulunmuyor";
+      closedDesc.textContent = "Zaman aşımına uğramamış veya süresi dolmamış güncel bir içerik bulunmamaktadır.";
+      restartBtn.textContent = "Yeniden Kontrol Et";
+      
+      // Override restart button action to fetch and check again
+      restartBtn.onclick = async (e) => {
+        e.stopPropagation();
+        // Restore default texts and behavior
+        closedTitle.textContent = "Akış Kapatıldı";
+        closedDesc.textContent = "Kiosk hikaye izleyicisi durduruldu. Akışı tekrar başlatmak için butona basabilirsiniz.";
+        restartBtn.onclick = restartViewer;
+        
+        await refreshStories();
+      };
+      
+      closedScreen.classList.add('active');
+    }
+
+    // Fetch stories JSON again and re-filter (useful for retrying when empty)
+    async function refreshStories() {
+      try {
+        // Fetch with timestamp query parameter to bypass caching
+        const response = await fetch('kaynak.json?t=' + Date.now());
+        if (!response.ok) throw new Error('Network response error');
+        const data = await response.json();
+        stories = data.icerikler || fallbackData.icerikler;
+      } catch (err) {
+        console.warn('Local JSON fetch failed. Using fallback data.', err);
+        stories = fallbackData.icerikler;
+      }
+      
+      filterExpiredStories();
+      
+      if (stories.length === 0) {
+        showEmptyState();
+      } else {
+        closedScreen.classList.remove('active');
+        isPaused = false;
+        checkIsMobile();
+        buildNavigation();
+        loadStory(0);
+        
+        // Start timeline loop if not running
+        if (!animationFrameId) {
+          lastTime = performance.now();
+          timerElapsed = 0;
+          animationFrameId = requestAnimationFrame(loop);
+        }
+      }
+    }
+
+    // Initialize application: Fetch stories JSON
+    async function init() {
+      try {
+        const response = await fetch('kaynak.json');
+        if (!response.ok) throw new Error('Network response error');
+        const data = await response.json();
+        stories = data.icerikler || fallbackData.icerikler;
+      } catch (err) {
+        console.warn('Local JSON fetch failed (likely CORS/file://). Using embedded fallback data.', err);
+        stories = fallbackData.icerikler;
+      }
+      
+      // Filter out expired stories
+      filterExpiredStories();
+      
+      if (stories.length === 0) {
+        showEmptyState();
+        return;
+      }
+      
+      checkIsMobile();
+      buildNavigation();
+      loadStory(0);
+      
+      // Start main timer loop
+      lastTime = performance.now();
+      timerElapsed = 0;
+      animationFrameId = requestAnimationFrame(loop);
+    }
+
+    // Check if we are on mobile display widths
+    function checkIsMobile() {
+      isMobile = window.innerWidth <= 800;
+    }
+
+    function handleResize() {
+      const wasMobile = isMobile;
+      checkIsMobile();
+      if (wasMobile !== isMobile) {
+        // Rebuild dots navigation because progress rings resize dynamically
+        buildNavigation();
+        updateNavigationUI();
+      }
+    }
+
+    // Build Circular dots & Horizontal segment lines based on content count
+    function buildNavigation() {
+      navDots.innerHTML = '';
+      progressSegments.innerHTML = '';
+      
+      stories.forEach((item, index) => {
+        // 1. Build Circular buttons (nav-dots)
+        const dot = document.createElement('button');
+        dot.className = `story-dot ${index === currentIdx ? 'active' : ''}`;
+        dot.setAttribute('aria-label', `${index + 1}. hikayeye git`);
+        
+        // Progress Ring SVG radius and circumference based on layout size
+        const radius = 72;
+        const circ = 2 * Math.PI * radius; // 452.4
+        const size = 162;
+        const center = size / 2;
+        
+        dot.innerHTML = `
+          <svg class="progress-ring" width="${size}" height="${size}">
+            <circle class="progress-ring__bg" cx="${center}" cy="${center}" r="${radius}" />
+            <circle class="progress-ring__circle" cx="${center}" cy="${center}" r="${radius}" 
+              style="stroke-dasharray: ${circ}; stroke-dashoffset: ${circ};" />
+          </svg>
+          <div class="dot-inner">
+            <img src="${getCategoryIcon(item.icerik_turu)}" alt="${item.icerik_turu}">
+          </div>
+          <span class="dot-tooltip">${item.icerik_turu}</span>
+        `;
+        
+        dot.addEventListener('click', (e) => {
+          e.stopPropagation(); // Avoid triggering card tap click
+          jumpToStory(index);
+        });
+        
+        navDots.appendChild(dot);
+        
+        // 2. Build Horizontal segments (progress-segments)
+        const segment = document.createElement('div');
+        segment.className = 'progress-segment';
+        segment.innerHTML = `<div class="progress-segment-fill"></div>`;
+        progressSegments.appendChild(segment);
+      });
+    }
+
+    // Populate active story items and trigger transitions
+    function loadStory(idx) {
+      currentIdx = idx;
+      const item = stories[currentIdx];
+      
+      // Update durations
+      timerDuration = (item.gosterim_suresi_sn || 5) * 1000;
+      timerElapsed = 0;
+      
+      // Clear trigger menu
+      reactionMenu.classList.remove('open');
+      
+      // Toggle transition animation in text card
+      storyBody.classList.add('switching');
+      
+      // Load Image
+      imagePreloader.style.opacity = '1';
+      storyImage.classList.remove('loaded');
+      
+      const newImgSrc = formatImagePath(item.resim_url);
+      storyImage.src = newImgSrc;
+      ambientBg.style.backgroundImage = `url('${newImgSrc}')`;
+      
+      storyImage.onload = () => {
+        imagePreloader.style.opacity = '0';
+        storyImage.classList.add('loaded');
+      };
+      
+      // Fallback in case image is missing
+      storyImage.onerror = () => {
+        imagePreloader.style.opacity = '0';
+        storyImage.src = '';
+        ambientBg.style.backgroundImage = 'none';
+      };
+
+      // Set Text Data (with 150ms delay for smooth fading)
+      setTimeout(() => {
+        // Set content badge type & styling class
+        categoryBadge.textContent = item.icerik_turu;
+        categoryBadge.className = 'badge ' + item.icerik_turu.toLowerCase()
+          .replace('ı','i').replace('ö','o').replace('ü','u').replace('ş','s').replace('ç','c').replace('ğ','g');
+        
+        storyTitle.textContent = item.baslik;
+        storyText.innerHTML = item.metin;
+        
+        storyBody.classList.remove('switching');
+      }, 150);
+
+      // Pick a random reaction image and change icon
+      const reactionImages = ['assets/kupa.png', 'assets/kalp.png', 'assets/begen.png'];
+      const randomImg = reactionImages[Math.floor(Math.random() * reactionImages.length)];
+      activeReactionImg.src = randomImg;
+
+      // Automatically trigger explosion and button pop effect with a slight delay
+      setTimeout(() => {
+        // Only trigger if this story is still the active one
+        if (stories[currentIdx] === item) {
+          reactionTriggerBtn.classList.add('pop-animate');
+          setTimeout(() => {
+            reactionTriggerBtn.classList.remove('pop-animate');
+          }, 300);
+          triggerReactionExplosion(randomImg);
+        }
+      }, 300);
+
+      updateNavigationUI();
+    }
+
+    // Updates classes on buttons, active ring styles, segments
+    function updateNavigationUI() {
+      const dots = document.querySelectorAll('.story-dot');
+      const segmentFills = document.querySelectorAll('.progress-segment-fill');
+      
+      dots.forEach((dot, index) => {
+        const ring = dot.querySelector('.progress-ring__circle');
+        const radius = 72;
+        const circ = 2 * Math.PI * radius;
+        
+        if (index === currentIdx) {
+          dot.classList.add('active');
+        } else {
+          dot.classList.remove('active');
+          // Fill completed dots, empty pending dots
+          if (index < currentIdx) {
+            ring.style.strokeDashoffset = '0';
+            segmentFills[index].style.width = '100%';
+          } else {
+            ring.style.strokeDashoffset = circ;
+            segmentFills[index].style.width = '0%';
+          }
+        }
+      });
+    }
+
+    // Jump to selected index instantly
+    function jumpToStory(idx) {
+      if (idx < 0) idx = stories.length - 1;
+      if (idx >= stories.length) idx = 0;
+      loadStory(idx);
+    }
+
+    function nextStory() {
+      if (currentIdx === stories.length - 1) {
+        jumpToStory(0);
+      } else {
+        jumpToStory(currentIdx + 1);
+      }
+    }
+
+    function prevStory() {
+      if (currentIdx === 0) {
+        jumpToStory(stories.length - 1);
+      } else {
+        jumpToStory(currentIdx - 1);
+      }
+    }
+
+    // Main Timer Loop (using requestAnimationFrame)
+    function loop(timestamp) {
+      if (!lastTime) lastTime = timestamp;
+      const dt = timestamp - lastTime;
+      lastTime = timestamp;
+      
+      if (!isPaused) {
+        timerElapsed += dt;
+        
+        if (timerElapsed >= timerDuration) {
+          timerElapsed = 0;
+          nextStory();
+        } else {
+          renderProgress();
+        }
+      }
+      
+      animationFrameId = requestAnimationFrame(loop);
+    }
+
+    // Renders active story's progress ring and segment fill
+    function renderProgress() {
+      const percent = timerElapsed / timerDuration;
+      
+      // 1. Update Circular progress ring
+      const activeDot = document.querySelector('.story-dot.active');
+      if (activeDot) {
+        const ring = activeDot.querySelector('.progress-ring__circle');
+        const radius = 72;
+        const circ = 2 * Math.PI * radius;
+        const offset = circ - (percent * circ);
+        ring.style.strokeDashoffset = offset;
+      }
+      
+      // 2. Update Horizontal segment bar
+      const activeSegmentFill = progressSegments.children[currentIdx]?.querySelector('.progress-segment-fill');
+      if (activeSegmentFill) {
+        activeSegmentFill.style.width = `${percent * 100}%`;
+      }
+    }
+
+    // Soft Close Overlay controls
+    function closeViewer() {
+      isPaused = true;
+      pauseOverlay.classList.remove('visible');
+      closedScreen.classList.add('active');
+      
+      // Exit fullscreen if active
+      if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+        const exitFS = document.exitFullscreen || 
+                       document.webkitExitFullscreen || 
+                       document.mozCancelFullScreen || 
+                       document.msExitFullscreen;
+        if (exitFS) {
+          exitFS.call(document).catch(err => console.warn("Fullscreen exit error:", err));
+        }
+      }
+
+      // Attempt to close the tab/window
+      setTimeout(() => {
+        window.close();
+      }, 150);
+    }
+
+    function restartViewer() {
+      refreshStories();
+    }
+
+    // Reaction Picker Interaction
+    reactionTriggerBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      reactionMenu.classList.toggle('open');
+    });
+
+    document.addEventListener('click', () => {
+      reactionMenu.classList.remove('open');
+    });
+
+    // Handle reaction menu item clicks
+    const menuItems = document.querySelectorAll('.reaction-menu-item');
+    menuItems.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const reactionType = btn.getAttribute('data-reaction');
+        
+        // Update trigger icon
+        let srcPath = 'assets/kupa.png';
+        if (reactionType === 'kalp') srcPath = 'assets/kalp.png';
+        if (reactionType === 'begen') srcPath = 'assets/begen.png';
+        
+        activeReactionImg.src = srcPath;
+        reactionMenu.classList.remove('open');
+        
+        triggerReactionExplosion(srcPath);
+      });
+    });
+
+    // Particle explosion logic
+    function triggerReactionExplosion(imgSrc) {
+      const rect = reactionTriggerBtn.getBoundingClientRect();
+      const startX = rect.left + rect.width / 2;
+      const startY = rect.top + rect.height / 2;
+      
+      const particleCount = 18;
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('img');
+        particle.className = 'reaction-particle';
+        particle.src = imgSrc;
+        
+        particle.style.left = `${startX - 21}px`; // center alignment (half width)
+        particle.style.top = `${startY - 21}px`;
+        
+        // Dynamic curves calculations
+        const xMid = (Math.random() - 0.5) * 100;
+        const yMid = -100 - Math.random() * 80;
+        const xEnd = xMid + (Math.random() - 0.5) * 140;
+        const yEnd = -300 - Math.random() * 250;
+        
+        const rotMid = (Math.random() - 0.5) * 90;
+        const rotEnd = (Math.random() - 0.5) * 270;
+        
+        particle.style.setProperty('--x-mid', `${xMid}px`);
+        particle.style.setProperty('--y-mid', `${yMid}px`);
+        particle.style.setProperty('--x-end', `${xEnd}px`);
+        particle.style.setProperty('--y-end', `${yEnd}px`);
+        
+        particle.style.setProperty('--rot-mid', `${rotMid}deg`);
+        particle.style.setProperty('--rot-end', `${rotEnd}deg`);
+        
+        const duration = 1.1 + Math.random() * 0.6;
+        particle.style.animationDuration = `${duration}s`;
+        
+        document.body.appendChild(particle);
+        
+        particle.addEventListener('animationend', () => {
+          particle.remove();
+        });
+      }
+    }
+
+    // Pause / Resume Mechanism
+    function pauseTimeline() {
+      isPaused = true;
+      pauseOverlay.classList.add('visible');
+    }
+
+    function resumeTimeline() {
+      isPaused = false;
+      pauseOverlay.classList.remove('visible');
+      lastTime = performance.now();
+    }
+
+    // Attach listeners for Tap and Hold
+    viewerCard.addEventListener('mousedown', (e) => {
+      if (e.target.closest('#reactionContainer') || e.target.closest('#exitBtn') || e.target.closest('.nav-arrow') || e.target.closest('.nav-dots')) return;
+      pauseTimeline();
+    });
+    
+    window.addEventListener('mouseup', () => {
+      if (isPaused && !closedScreen.classList.contains('active')) {
+        resumeTimeline();
+      }
+    });
+
+    viewerCard.addEventListener('touchstart', (e) => {
+      if (e.target.closest('#reactionContainer') || e.target.closest('#exitBtn') || e.target.closest('.nav-dots')) return;
+      pauseTimeline();
+    });
+
+    window.addEventListener('touchend', () => {
+      if (isPaused && !closedScreen.classList.contains('active')) {
+        resumeTimeline();
+      }
+    });
+
+    // Tap boundaries (Left 25% / Right 25% of viewport width)
+    tapLeft.addEventListener('click', (e) => {
+      e.stopPropagation();
+      prevStory();
+    });
+    
+    tapRight.addEventListener('click', (e) => {
+      e.stopPropagation();
+      nextStory();
+    });
+
+    // Keyboard support (Space: pause, Left: prev, Right: next, Esc: exit)
+    document.addEventListener('keydown', (e) => {
+      if (closedScreen.classList.contains('active')) return;
+      
+      if (e.code === 'Space') {
+        e.preventDefault();
+        isPaused ? resumeTimeline() : pauseTimeline();
+      } else if (e.code === 'ArrowLeft') {
+        prevStory();
+      } else if (e.code === 'ArrowRight') {
+        nextStory();
+      } else if (e.code === 'Escape') {
+        closeViewer();
+      }
+    });
+
+    // Navigation buttons binding
+    prevBtn.addEventListener('click', prevStory);
+    nextBtn.addEventListener('click', nextStory);
+    exitBtn.addEventListener('click', closeViewer);
+    restartBtn.addEventListener('click', restartViewer);
+    window.addEventListener('resize', handleResize);
+
+    // Initial load
+    init();
+  </script>
+</body>
+</html>
