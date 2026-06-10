@@ -58,10 +58,17 @@ def open_in_kiosk(url):
     Belirtilen URL'i tarayıcıda kiosk modunda açmayı dener.
     Başarılı olursa Popen sürecini (process) döner, başarısız olursa None döner.
     """
+    temp_dir = os.path.join(tempfile.gettempdir(), "kaynak_gosterici_kiosk")
+    chrome_profile = os.path.join(temp_dir, "chrome_profile")
+    try:
+        os.makedirs(chrome_profile, exist_ok=True)
+    except Exception:
+        pass
+
     browsers = [
-        ("google-chrome", ["--kiosk", url]),
-        ("chromium-browser", ["--kiosk", url]),
-        ("chromium", ["--kiosk", url]),
+        ("google-chrome", [f"--user-data-dir={chrome_profile}", "--no-first-run", "--no-default-browser-check", "--kiosk", url]),
+        ("chromium-browser", [f"--user-data-dir={chrome_profile}", "--no-first-run", "--no-default-browser-check", "--kiosk", url]),
+        ("chromium", [f"--user-data-dir={chrome_profile}", "--no-first-run", "--no-default-browser-check", "--kiosk", url]),
         ("firefox", ["--kiosk", url])
     ]
     
@@ -253,6 +260,10 @@ def main():
             print(f"Detaylı hata: {download_error}", file=sys.stderr)
             return
 
+        if not os.path.exists(zip_path):
+            print("Hata: kaynak.zip dosyası indirilemedi (dosya bulunamadı). Kiosk başlatılmıyor.", file=sys.stderr)
+            return
+
         # 3. Zip dosyasını yeni baştan çıkart
         print("[3/4] Zip dosyası çıkartılıyor...")
         try:
@@ -283,6 +294,56 @@ def main():
             # index.html dosyasının bulunduğu klasörü sunucu kök dizini yapıyoruz
             server_dir = os.path.dirname(os.path.abspath(index_path))
             
+            # kaynak.json kontrolü
+            json_path = os.path.join(server_dir, "kaynak.json")
+            if not os.path.exists(json_path):
+                print("Hata: 'kaynak.json' dosyası bulunamadı. Kiosk başlatılmıyor.", file=sys.stderr)
+                return
+                
+            try:
+                import json
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+            except Exception as json_err:
+                print(f"Hata: 'kaynak.json' okunamadı veya geçersiz JSON formatı: {json_err}", file=sys.stderr)
+                return
+                
+            stories = data.get("icerikler", [])
+            if not stories:
+                print("Hata: 'kaynak.json' içinde hiçbir haber/içerik bulunamadı. Kiosk başlatılmıyor.", file=sys.stderr)
+                return
+                
+            # Güncel/aktif haber kontrolü
+            from datetime import datetime, timedelta
+            
+            def is_story_expired(story):
+                olusturma = story.get("olusturma_tarihi")
+                if not olusturma:
+                    return False
+                    
+                try:
+                    dt_str = olusturma.replace("T", " ")
+                    creation_time = datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S")
+                except ValueError:
+                    return False
+                    
+                validity = story.get("gecerlilik_suresi_saat")
+                try:
+                    validity = int(validity) if validity is not None else 0
+                except (ValueError, TypeError):
+                    validity = 0
+                    
+                if validity == 0:
+                    return False
+                    
+                expiration_time = creation_time + timedelta(hours=validity)
+                return datetime.now() > expiration_time
+
+            active_stories = [s for s in stories if not is_story_expired(s)]
+            if not active_stories:
+                print("Hata: kaynak.json içindeki tüm haberlerin gösterim tarihi geçmiş (güncel haber yok). Kiosk başlatılmıyor.", file=sys.stderr)
+                return
+
             # Lokal HTTP Sunucusunu başlat
             server = ThreadedHTTPServer(server_dir)
             port = server.start()

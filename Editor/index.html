@@ -107,7 +107,16 @@
       align-items: center;
       justify-content: center;
       z-index: 5;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    
+    .image-preloader.visible {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
     }
     
     .spinner {
@@ -951,7 +960,7 @@
 
     <!-- Center Slide Image Display -->
     <section class="image-area" id="imageArea">
-      <div class="image-preloader" id="imagePreloader">
+      <div class="image-preloader visible" id="imagePreloader">
         <div class="spinner"></div>
       </div>
       
@@ -1033,33 +1042,43 @@
     const fallbackData = {
           "icerikler": [
                 {
-                      "icerik_turu": "Duyuru",
-                      "resim_url": "04.jpg",
+                      "icerik_turu": "Başarı",
+                      "resim_url": "01.jpg",
                       "video_url": "",
-                      "baslik": "dddddddd",
-                      "metin": "ssss",
-                      "gosterim_suresi_sn": 5,
-                      "olusturma_tarihi": "2026-05-30T10:27:21",
+                      "baslik": "Stem Ödül Töreni",
+                      "metin": "🎉 Büyük Başarı! Kayseri'deki teknoloji meraklısı öğrencilerimiz, hazırladıkları yenilikçi kodlama projesiyle Avrupa'daki rakiplerini geride bırakarak eTwinning Avrupa Ödülü'nü kazandı! 🏆\n\nGeleceğin yazılımcıları, bu harika başarıyla hem okulumuzu hem de ülkemizi gururlandırdı. 🇹🇷 Bilim ve teknolojiyle büyüyen tüm öğrencilerimizi ve emeği geçen öğretmenlerimizi yürekten tebrik ediyoruz! 🚀👏İçerik Metnini buraya yazın ",
+                      "gosterim_suresi_sn": 10,
+                      "olusturma_tarihi": "2026-06-08T15:23:19",
+                      "gecerlilik_suresi_saat": 72
+                },
+                {
+                      "icerik_turu": "Duyuru",
+                      "resim_url": "02.jpg",
+                      "video_url": "",
+                      "baslik": "Etwinning başvuruları başladı",
+                      "metin": "🎉 Büyük Başarı! Kayseri'deki teknoloji meraklısı öğrencilerimiz, hazırladıkları yenilikçi kodlama projesiyle Avrupa'daki rakiplerini geride bırakarak eTwinning Avrupa Ödülü'nü kazandı! 🏆\n🚀👏 \nGeleceğin yazılımcıları, bu harika başarıyla hem okulumuzu hem de ülkemizi gururlandırdı. \n🚀👏 🚀👏 🚀👏 🚀👏 \n🇹🇷 Bilim ve teknolojiyle büyüyen tüm öğrencilerimizi ve emeği geçen öğretmenlerimizi yürekten tebrik ediyoruz! ",
+                      "gosterim_suresi_sn": 10,
+                      "olusturma_tarihi": "2026-06-08T15:25:03",
                       "gecerlilik_suresi_saat": 24
                 },
                 {
                       "icerik_turu": "Duyuru",
                       "resim_url": "03.jpg",
                       "video_url": "",
-                      "baslik": "asdfads fasdfasd",
-                      "metin": "ssss adaasasdasd \n<H1>Bugün hava çok güzel. ☀️ Üstelik kod yazmayı çok seviyorum! 💻 Roket hızında öğreniyoruz: 🚀</h1>",
+                      "baslik": "Robotik Kodlama Yarışması",
+                      "metin": "🚀👏 🎉 Büyük Başarı! Kayseri'deki teknoloji meraklısı öğrencilerimiz, hazırladıkları yenilikçi kodlama projesiyle Avrupa'daki rakiplerini geride bırakarak eTwinning Avrupa Ödülü'nü kazandı! 🏆\n🚀👏🚀👏🚀👏🚀👏🚀👏\nGeleceğin yazılımcıları, bu harika başarıyla hem okulumuzu hem de ülkemizi gururlandırdı. 🇹🇷 Bilim ve teknolojiyle büyüyen tüm öğrencilerimizi ve emeği geçen öğretmenlerimizi yürekten tebrik ediyoruz! 🚀👏",
                       "gosterim_suresi_sn": 5,
-                      "olusturma_tarihi": "2026-05-30T10:27:37",
+                      "olusturma_tarihi": "2026-06-08T15:25:47",
                       "gecerlilik_suresi_saat": 24
                 },
                 {
                       "icerik_turu": "Duyuru",
-                      "resim_url": "05.jpg",
+                      "resim_url": "04.jpg",
                       "video_url": "",
-                      "baslik": "Başlık Ekleyin",
+                      "baslik": "Henüz Başlık Yok",
                       "metin": "İçerik Metnini buraya yazın ",
                       "gosterim_suresi_sn": 5,
-                      "olusturma_tarihi": "2026-05-30T11:20:16",
+                      "olusturma_tarihi": "2026-06-08T15:01:38",
                       "gecerlilik_suresi_saat": 24
                 }
           ]
@@ -1337,7 +1356,7 @@
       storyBody.classList.add('switching');
       
       // Load Image
-      imagePreloader.style.opacity = '1';
+      imagePreloader.classList.add('visible');
       storyImage.classList.remove('loaded');
       
       const newImgSrc = formatImagePath(item.resim_url);
@@ -1345,16 +1364,23 @@
       ambientBg.style.backgroundImage = `url('${newImgSrc}')`;
       
       storyImage.onload = () => {
-        imagePreloader.style.opacity = '0';
+        imagePreloader.classList.remove('visible');
         storyImage.classList.add('loaded');
       };
       
       // Fallback in case image is missing
       storyImage.onerror = () => {
-        imagePreloader.style.opacity = '0';
+        imagePreloader.classList.remove('visible');
         storyImage.src = '';
         ambientBg.style.backgroundImage = 'none';
       };
+
+      // Preload the next story image
+      if (stories.length > 1) {
+        const nextIdx = (idx + 1) % stories.length;
+        const nextImg = new Image();
+        nextImg.src = formatImagePath(stories[nextIdx].resim_url);
+      }
 
       // Set Text Data (with 150ms delay for smooth fading)
       setTimeout(() => {

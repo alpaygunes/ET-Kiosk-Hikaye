@@ -100,6 +100,7 @@ class StoryEditorApp:
         self.stories = []
         self.selected_index = None
         self.is_loading_item = False
+        self.is_dirty = False
         
         # Setup modern style
         self.style = ttk.Style()
@@ -129,6 +130,9 @@ class StoryEditorApp:
         # Load JSON data
         self.load_json_data()
         
+        # Bind close window protocol
+        self.root.protocol("WM_DELETE_WINDOW", self.on_exit)
+        
     def configure_styles(self):
         # Configure colors and styles for a modern look
         bg_dark = "#111827"
@@ -157,6 +161,9 @@ class StoryEditorApp:
         # Treeview styling
         self.style.configure("Treeview", font=("Inter", 10), rowheight=28, background="#ffffff", fieldbackground="#ffffff")
         self.style.configure("Treeview.Heading", font=("Outfit", 10, "bold"), background="#e5e7eb", foreground="#374151")
+        self.style.map("Treeview",
+                       background=[('selected', '#10b981')],
+                       foreground=[('selected', 'white')])
         
         # Entry styling (padding 5px)
         self.style.configure("TEntry", padding=5)
@@ -297,10 +304,28 @@ class StoryEditorApp:
         self.entry_baslik = ttk.Entry(self.form_container, textvariable=self.var_baslik)
         self.entry_baslik.grid(row=3, column=0, columnspan=2, sticky=tk.W+tk.E)
         
-        # Row 2: Text (Description) with height 250px and padding 5px
-        ttk.Label(self.form_container, text="Metin / Açıklama:", style="Form.TLabel").grid(row=4, column=0, **grid_config)
+        # Row 2: Image Picker
+        ttk.Label(self.form_container, text="Hikaye Görseli:", style="Form.TLabel").grid(row=4, column=0, **grid_config)
+        img_frame = ttk.Frame(self.form_container)
+        img_frame.configure(style="TLabelframe")
+        img_frame.grid(row=5, column=0, columnspan=2, sticky=tk.W+tk.E)
+        
+        btn_select_img = ttk.Button(img_frame, text="🖼️", width=4, command=self.select_image)
+        btn_select_img.pack(side=tk.RIGHT, padx=(5, 0))
+        ToolTip(btn_select_img, "Bilgisayarınızdan hikaye için bir görsel dosya seçin")
+        
+        self.lbl_img_path = ttk.Label(img_frame, textvariable=self.var_resim, style="FormItalic.TLabel")
+        self.lbl_img_path.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        
+        # Row 3: Visual Thumbnail Preview
+        ttk.Label(self.form_container, text="Görsel Önizleme:", style="Form.TLabel").grid(row=6, column=0, **grid_config)
+        self.lbl_thumbnail = ttk.Label(self.form_container, text="[Önizleme Yok]", borderwidth=1, relief="solid", background="#f3f4f6")
+        self.lbl_thumbnail.grid(row=7, column=0, columnspan=2, sticky=tk.W, pady=5)
+        
+        # Row 4: Text (Description) with height 250px and padding 5px
+        ttk.Label(self.form_container, text="Metin / Açıklama:", style="Form.TLabel").grid(row=8, column=0, **grid_config)
         text_frame = ttk.Frame(self.form_container, height=250)
-        text_frame.grid(row=5, column=0, columnspan=2, sticky=tk.W+tk.E)
+        text_frame.grid(row=9, column=0, columnspan=2, sticky=tk.W+tk.E)
         text_frame.pack_propagate(False)
         self.text_metin = tk.Text(text_frame, font=("Inter", 10), wrap=tk.WORD, borderwidth=1, relief="solid", padx=5, pady=5)
         self.text_metin.pack(fill=tk.BOTH, expand=True)
@@ -313,38 +338,20 @@ class StoryEditorApp:
         self.var_süre.trace_add("write", lambda *args: self.auto_update_current_story())
         self.var_gecerlilik_suresi.trace_add("write", lambda *args: self.auto_update_current_story())
         
-        # Row 3: Duration Entry (Right-aligned, digit-only)
-        ttk.Label(self.form_container, text="Gösterim Süresi (Saniye):", style="Form.TLabel").grid(row=6, column=0, **grid_config)
+        # Row 5: Duration Entry (Right-aligned, digit-only)
+        ttk.Label(self.form_container, text="Gösterim Süresi (Saniye):", style="Form.TLabel").grid(row=10, column=0, **grid_config)
         self.entry_süre = ttk.Entry(self.form_container, textvariable=self.var_süre, justify=tk.RIGHT, width=12, validate="key", validatecommand=vcmd)
-        self.entry_süre.grid(row=6, column=1, sticky=tk.E, pady=8)
+        self.entry_süre.grid(row=10, column=1, sticky=tk.E, pady=8)
         
-        # Row 4: Validity Duration Entry (Right-aligned, digit-only)
-        ttk.Label(self.form_container, text="Geçerlilik Süresi (Saat):", style="Form.TLabel").grid(row=7, column=0, **grid_config)
+        # Row 6: Validity Duration Entry (Right-aligned, digit-only)
+        ttk.Label(self.form_container, text="Geçerlilik Süresi (Saat):", style="Form.TLabel").grid(row=11, column=0, **grid_config)
         self.entry_gecerlilik = ttk.Entry(self.form_container, textvariable=self.var_gecerlilik_suresi, justify=tk.RIGHT, width=12, validate="key", validatecommand=vcmd)
-        self.entry_gecerlilik.grid(row=7, column=1, sticky=tk.E, pady=8)
+        self.entry_gecerlilik.grid(row=11, column=1, sticky=tk.E, pady=8)
         
-        # Row 5: Creation DateTime
-        ttk.Label(self.form_container, text="Oluşturulma Tarihi:", style="Form.TLabel").grid(row=8, column=0, **grid_config)
+        # Row 7: Creation DateTime
+        ttk.Label(self.form_container, text="Oluşturulma Tarihi:", style="Form.TLabel").grid(row=12, column=0, **grid_config)
         self.lbl_olusturma_val = ttk.Label(self.form_container, textvariable=self.var_olusturma_tarihi, style="FormText.TLabel")
-        self.lbl_olusturma_val.grid(row=9, column=0, columnspan=2, sticky=tk.W+tk.E)
-        
-        # Row 6: Image Picker
-        ttk.Label(self.form_container, text="Hikaye Görseli:", style="Form.TLabel").grid(row=10, column=0, **grid_config)
-        img_frame = ttk.Frame(self.form_container)
-        img_frame.configure(style="TLabelframe")
-        img_frame.grid(row=11, column=0, columnspan=2, sticky=tk.W+tk.E)
-        
-        btn_select_img = ttk.Button(img_frame, text="🖼️", width=4, command=self.select_image)
-        btn_select_img.pack(side=tk.RIGHT, padx=(5, 0))
-        ToolTip(btn_select_img, "Bilgisayarınızdan hikaye için bir görsel dosya seçin")
-        
-        self.lbl_img_path = ttk.Label(img_frame, textvariable=self.var_resim, style="FormItalic.TLabel")
-        self.lbl_img_path.pack(side=tk.LEFT, fill=tk.X, expand=True)
-        
-        # Row 7: Visual Thumbnail Preview
-        ttk.Label(self.form_container, text="Görsel Önizleme:", style="Form.TLabel").grid(row=12, column=0, **grid_config)
-        self.lbl_thumbnail = ttk.Label(self.form_container, text="[Önizleme Yok]", borderwidth=1, relief="solid", background="#f3f4f6")
-        self.lbl_thumbnail.grid(row=13, column=0, columnspan=2, sticky=tk.W, pady=5)
+        self.lbl_olusturma_val.grid(row=13, column=0, columnspan=2, sticky=tk.W+tk.E)
         
         # Actions frame moved to the bottom of right_panel (outside the scrollable canvas)
         pass
@@ -417,17 +424,6 @@ class StoryEditorApp:
             return
             
         new_index = int(selected[0])
-        
-        # Check if the PREVIOUSLY selected item has no image
-        if self.selected_index is not None and self.selected_index != new_index:
-            if self.selected_index < len(self.stories):
-                prev_story = self.stories[self.selected_index]
-                if not prev_story.get("resim_url") or not prev_story.get("resim_url").strip():
-                    self.is_loading_item = True
-                    self.tree.selection_set(str(self.selected_index))
-                    self.is_loading_item = False
-                    messagebox.showwarning("Eksik Bilgi", "Hikayeye resim eklenmedi, bir resim eklemelisiniz!")
-                    return
             
         self.is_loading_item = True
         
@@ -615,13 +611,6 @@ class StoryEditorApp:
         return "01.jpg"  # fallback
 
     def add_new_story_automatically(self):
-        # Check if currently selected item is missing an image
-        if self.selected_index is not None:
-            curr_story = self.stories[self.selected_index]
-            if not curr_story.get("resim_url") or not curr_story.get("resim_url").strip():
-                messagebox.showwarning("Eksik Bilgi", "Hikayeye resim eklenmedi, bir resim eklemelisiniz!")
-                return
-                
         now_str = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         new_story = {
             "icerik_turu": "Duyuru",
@@ -643,9 +632,7 @@ class StoryEditorApp:
         
         # Auto-save changes
         self.save_to_json(silent=True)
-        
-        # Show warning
-        messagebox.showwarning("Eksik Bilgi", "Hikayeye resim eklenmedi, bir resim eklemelisiniz!")
+        self.is_dirty = True
 
     def on_text_modified(self, event=None):
         if self.text_metin.edit_modified():
@@ -699,6 +686,7 @@ class StoryEditorApp:
         )
         
         self.save_to_json(silent=True)
+        self.is_dirty = True
 
     def delete_story_image_file(self, story_to_delete):
         resim_url = story_to_delete.get("resim_url")
@@ -759,6 +747,7 @@ class StoryEditorApp:
             
             # Auto-save changes
             self.save_to_json(silent=True)
+            self.is_dirty = True
             messagebox.showinfo("Başarılı", "Hikaye listeden kaldırıldı ve kaydedildi!")
 
     def save_to_json(self, silent=False):
@@ -768,7 +757,8 @@ class StoryEditorApp:
                 if not story.get("resim_url") or not story.get("resim_url").strip():
                     messagebox.showwarning("Eksik Bilgi", f"{idx+1}. sıradaki hikayeye resim eklenmedi, bir resim eklemelisiniz!")
                     self.tree.selection_set(str(idx))
-                    return
+                    self.tree.see(str(idx))
+                    return False
                     
         # Save memory state back to disk
         try:
@@ -787,13 +777,16 @@ class StoryEditorApp:
             if not silent:
                 self.compress_project(silent=True)
                 messagebox.showinfo("Başarılı", "Kaydedildi")
+                self.is_dirty = False
             else:
                 self.set_status("Değişiklikler otomatik olarak kaydedildi.")
+            return True
         except Exception as e:
             if not silent:
                 messagebox.showerror("Hata", f"Kaydedilirken bir hata oluştu:\n{str(e)}")
             else:
                 self.set_status(f"Hata: Değişiklikler kaydedilemedi! ({str(e)})")
+            return False
 
     def move_up(self):
         if self.selected_index is None or self.selected_index == 0:
@@ -807,6 +800,7 @@ class StoryEditorApp:
         self.tree.selection_set(str(self.selected_index))
         # Auto-save changes silently
         self.save_to_json(silent=True)
+        self.is_dirty = True
         
     def move_down(self):
         if self.selected_index is None or self.selected_index == len(self.stories) - 1:
@@ -820,6 +814,7 @@ class StoryEditorApp:
         self.tree.selection_set(str(self.selected_index))
         # Auto-save changes silently
         self.save_to_json(silent=True)
+        self.is_dirty = True
         
     def update_move_buttons_state(self):
         if self.selected_index is None:
@@ -907,6 +902,19 @@ class StoryEditorApp:
                 messagebox.showerror("Hata", f"Sıkıştırma işlemi sırasında hata oluştu:\n{str(e)}")
             else:
                 self.set_status(f"Hata: kaynak.zip oluşturulamadı! ({str(e)})")
+
+    def on_exit(self):
+        if self.is_dirty:
+            ans = messagebox.askyesnocancel("Çıkış", "Değişiklikler kaydedilmedi. Kaydedip çıkmak istiyor musunuz?")
+            if ans is True:
+                if self.save_to_json(silent=False):
+                    self.root.destroy()
+            elif ans is False:
+                self.root.destroy()
+            else:
+                pass
+        else:
+            self.root.destroy()
 
 def main():
     root = tk.Tk()
