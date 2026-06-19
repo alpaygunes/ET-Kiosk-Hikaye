@@ -6,6 +6,7 @@ import json
 import shutil
 import sys
 import re
+import random
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from datetime import datetime, timedelta
@@ -288,6 +289,8 @@ class StoryEditorApp:
         self.var_süre = tk.StringVar(value="5")
         self.var_olusturma_tarihi = tk.StringVar(value="Yeni içerik kaydedildiğinde oluşturulacak")
         self.var_gecerlilik_suresi = tk.StringVar(value="24")
+        self.audio_files = self.get_audio_files()
+        self.var_ses = tk.StringVar(value="yok")
         
         # Validation command for numeric inputs
         vcmd = (self.root.register(self.validate_numeric), '%P')
@@ -337,6 +340,7 @@ class StoryEditorApp:
         self.var_resim.trace_add("write", lambda *args: self.auto_update_current_story())
         self.var_süre.trace_add("write", lambda *args: self.auto_update_current_story())
         self.var_gecerlilik_suresi.trace_add("write", lambda *args: self.auto_update_current_story())
+        self.var_ses.trace_add("write", lambda *args: self.auto_update_current_story())
         
         # Row 5: Duration Entry (Right-aligned, digit-only)
         ttk.Label(self.form_container, text="Gösterim Süresi (Saniye):", style="Form.TLabel").grid(row=10, column=0, **grid_config)
@@ -348,10 +352,15 @@ class StoryEditorApp:
         self.entry_gecerlilik = ttk.Entry(self.form_container, textvariable=self.var_gecerlilik_suresi, justify=tk.RIGHT, width=12, validate="key", validatecommand=vcmd)
         self.entry_gecerlilik.grid(row=11, column=1, sticky=tk.E, pady=8)
         
-        # Row 7: Creation DateTime
-        ttk.Label(self.form_container, text="Oluşturulma Tarihi:", style="Form.TLabel").grid(row=12, column=0, **grid_config)
+        # Row 7: Music Selection Combobox
+        ttk.Label(self.form_container, text="Müzik Seçimi:", style="Form.TLabel").grid(row=12, column=0, **grid_config)
+        self.combo_ses = ttk.Combobox(self.form_container, textvariable=self.var_ses, values=["yok"] + self.audio_files, state="readonly", width=12)
+        self.combo_ses.grid(row=12, column=1, sticky=tk.E, pady=8)
+        
+        # Row 8: Creation DateTime
+        ttk.Label(self.form_container, text="Oluşturulma Tarihi:", style="Form.TLabel").grid(row=13, column=0, **grid_config)
         self.lbl_olusturma_val = ttk.Label(self.form_container, textvariable=self.var_olusturma_tarihi, style="FormText.TLabel")
-        self.lbl_olusturma_val.grid(row=13, column=0, columnspan=2, sticky=tk.W+tk.E)
+        self.lbl_olusturma_val.grid(row=14, column=0, columnspan=2, sticky=tk.W+tk.E)
         
         # Actions frame moved to the bottom of right_panel (outside the scrollable canvas)
         pass
@@ -458,10 +467,26 @@ class StoryEditorApp:
         img_path = self.format_image_path(img_name)
         self.update_thumbnail_preview(img_path)
         
+        # Load and set background music
+        ses_name = story.get("ses_url", "")
+        if ses_name and ses_name in self.audio_files:
+            self.var_ses.set(ses_name)
+        else:
+            self.var_ses.set("yok")
+        
         # Update Move Buttons State
         self.update_move_buttons_state()
         
         self.is_loading_item = False
+
+    def get_audio_files(self):
+        ses_dir = os.path.join(self.workspace_dir, "ses")
+        if not os.path.exists(ses_dir):
+            return []
+        try:
+            return sorted([f for f in os.listdir(ses_dir) if f.lower().endswith('.mp3')])
+        except Exception:
+            return []
 
     def format_image_path(self, filename):
         if not filename:
@@ -590,6 +615,7 @@ class StoryEditorApp:
         self.var_resim.set("")
         self.var_olusturma_tarihi.set("Yeni içerik kaydedildiğinde oluşturulacak")
         self.var_gecerlilik_suresi.set("24")
+        self.var_ses.set("yok")
         self.lbl_thumbnail.config(image='', text="[Görsel Seçilmedi]")
         
         # Disable Move Buttons
@@ -611,11 +637,20 @@ class StoryEditorApp:
         return "01.jpg"  # fallback
 
     def add_new_story_automatically(self):
+        # Scan audio files list and select a random one by default if any exist
+        self.audio_files = self.get_audio_files()
+        self.combo_ses['values'] = ["yok"] + self.audio_files
+        
+        default_audio = ""
+        if self.audio_files:
+            default_audio = random.choice(self.audio_files)
+            
         now_str = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         new_story = {
             "icerik_turu": "Duyuru",
             "resim_url": "",
             "video_url": "",
+            "ses_url": default_audio,
             "baslik": "Başlık Ekleyin",
             "metin": "İçerik Metnini buraya yazın ",
             "gosterim_suresi_sn": 5,
@@ -646,6 +681,9 @@ class StoryEditorApp:
         baslik = self.var_baslik.get()
         metin = self.text_metin.get("1.0", "end-1c")
         resim = self.var_resim.get().strip()
+        ses = self.var_ses.get().strip()
+        if ses == "yok":
+            ses = ""
         
         try:
             validity_hours = int(self.var_gecerlilik_suresi.get().strip())
@@ -665,6 +703,7 @@ class StoryEditorApp:
         self.stories[self.selected_index].update({
             "icerik_turu": self.var_turu.get(),
             "resim_url": resim,
+            "ses_url": ses,
             "baslik": baslik,
             "metin": metin,
             "gosterim_suresi_sn": gosterim_suresi,
@@ -893,6 +932,20 @@ class StoryEditorApp:
                             file_path = os.path.join(root_dir, file)
                             rel_path = os.path.relpath(file_path, self.workspace_dir)
                             zipf.write(file_path, rel_path)
+                            
+                # 5. Add used ses files to ses/ directory in zip
+                ses_dir = os.path.join(self.workspace_dir, "ses")
+                if os.path.exists(ses_dir):
+                    added_ses = set()
+                    for story in self.stories:
+                        ses_url = story.get("ses_url")
+                        if ses_url and isinstance(ses_url, str):
+                            ses_url = ses_url.strip()
+                            if ses_url and ses_url.lower() != "yok" and ses_url not in added_ses:
+                                ses_file_path = os.path.join(ses_dir, ses_url)
+                                if os.path.exists(ses_file_path):
+                                    zipf.write(ses_file_path, os.path.join("ses", ses_url))
+                                    added_ses.add(ses_url)
                             
             if not silent:
                 messagebox.showinfo("Başarılı", f"Dosyalar başarıyla kaynak.zip adıyla sıkıştırıldı:\n{zip_path}")

@@ -7,8 +7,9 @@
       "baslik": "Stem Ödül Töreni",
       "metin": "🎉 Büyük Başarı! Kayseri'deki teknoloji meraklısı öğrencilerimiz, hazırladıkları yenilikçi kodlama projesiyle Avrupa'daki rakiplerini geride bırakarak eTwinning Avrupa Ödülü'nü kazandı! 🏆\n\nGeleceğin yazılımcıları, bu harika başarıyla hem okulumuzu hem de ülkemizi gururlandırdı. 🇹🇷 Bilim ve teknolojiyle büyüyen tüm öğrencilerimizi ve emeği geçen öğretmenlerimizi yürekten tebrik ediyoruz! 🚀👏İçerik Metnini buraya yazın ",
       "gosterim_suresi_sn": 10,
-      "olusturma_tarihi": "2026-06-08T15:23:19",
-      "gecerlilik_suresi_saat": 72
+      "olusturma_tarihi": "2026-06-19T15:23:19",
+      "gecerlilik_suresi_saat": 72,
+      "ses_url": ""
     },
     {
       "icerik_turu": "Duyuru",
@@ -17,8 +18,9 @@
       "baslik": "Etwinning başvuruları başladı",
       "metin": "🎉 Büyük Başarı! Kayseri'deki teknoloji meraklısı öğrencilerimiz, hazırladıkları yenilikçi kodlama projesiyle Avrupa'daki rakiplerini geride bırakarak eTwinning Avrupa Ödülü'nü kazandı! 🏆\n🚀👏 \nGeleceğin yazılımcıları, bu harika başarıyla hem okulumuzu hem de ülkemizi gururlandırdı. \n🚀👏 🚀👏 🚀👏 🚀👏 \n🇹🇷 Bilim ve teknolojiyle büyüyen tüm öğrencilerimizi ve emeği geçen öğretmenlerimizi yürekten tebrik ediyoruz! ",
       "gosterim_suresi_sn": 10,
-      "olusturma_tarihi": "2026-06-08T15:25:03",
-      "gecerlilik_suresi_saat": 24
+      "olusturma_tarihi": "2026-06-19T15:25:03",
+      "gecerlilik_suresi_saat": 24,
+      "ses_url": ""
     },
     {
       "icerik_turu": "Duyuru",
@@ -27,18 +29,20 @@
       "baslik": "Robotik Kodlama Yarışması",
       "metin": "🚀👏 🎉 Büyük Başarı! Kayseri'deki teknoloji meraklısı öğrencilerimiz, hazırladıkları yenilikçi kodlama projesiyle Avrupa'daki rakiplerini geride bırakarak eTwinning Avrupa Ödülü'nü kazandı! 🏆\n🚀👏🚀👏🚀👏🚀👏🚀👏\nGeleceğin yazılımcıları, bu harika başarıyla hem okulumuzu hem de ülkemizi gururlandırdı. 🇹🇷 Bilim ve teknolojiyle büyüyen tüm öğrencilerimizi ve emeği geçen öğretmenlerimizi yürekten tebrik ediyoruz! 🚀👏",
       "gosterim_suresi_sn": 5,
-      "olusturma_tarihi": "2026-06-08T15:25:47",
-      "gecerlilik_suresi_saat": 24
+      "olusturma_tarihi": "2026-06-19T15:25:47",
+      "gecerlilik_suresi_saat": 24,
+      "ses_url": ""
     },
     {
-      "icerik_turu": "Duyuru",
+      "icerik_turu": "Haber",
       "resim_url": "04.jpg",
       "video_url": "",
-      "baslik": "Henüz Başlık Yok",
+      "baslik": "Henüz Başlık Yok ",
       "metin": "İçerik Metnini buraya yazın ",
       "gosterim_suresi_sn": 5,
-      "olusturma_tarihi": "2026-06-08T15:01:38",
-      "gecerlilik_suresi_saat": 24
+      "olusturma_tarihi": "2026-06-19T15:01:38",
+      "gecerlilik_suresi_saat": 24,
+      "ses_url": "4.mp3"
     }
   ]
 }

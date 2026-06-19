@@ -200,8 +200,8 @@
     /* Circular Story Button */
     .story-dot {
       position: relative;
-      width: 150px;
-      height: 150px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
       background: rgba(15, 23, 42, 0.6);
       border: none;
@@ -230,15 +230,15 @@
     }
     
     .dot-inner {
-      width: 138px;
-      height: 138px;
+      width: 56px;
+      height: 56px;
       border-radius: 50%;
       background: rgba(10, 15, 30, 0.7);
       border: 1px solid rgba(255, 255, 255, 0.08);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
+      font-size: 14px;
       z-index: 2;
       transition: all 0.3s ease;
       overflow: hidden;
@@ -250,8 +250,8 @@
     }
     
     .dot-inner img {
-      width: 196px;
-      height: 196px;
+      width: 80px;
+      height: 80px;
       object-fit: contain;
       z-index: 3;
       transition: transform 0.3s ease;
@@ -264,10 +264,10 @@
     /* Progress SVG Circle */
     .progress-ring {
       position: absolute;
-      top: -6px;
-      left: -6px;
-      width: 162px;
-      height: 162px;
+      top: -4px;
+      left: -4px;
+      width: 72px;
+      height: 72px;
       transform: rotate(-90deg);
       pointer-events: none;
       z-index: 1;
@@ -284,8 +284,8 @@
       stroke: url(#ringGradient);
       stroke-width: 3px;
       stroke-linecap: round;
-      stroke-dasharray: 452; /* 2 * PI * r (r=72) */
-      stroke-dashoffset: 452;
+      stroke-dasharray: 194.78; /* 2 * PI * r (r=31) */
+      stroke-dashoffset: 194.78;
     }
     
     /* Tooltip */
@@ -549,11 +549,11 @@
     }
     
     .reaction-trigger-btn {
-      width: 56px;
-      height: 56px;
+      width: 96px;
+      height: 96px;
       border-radius: 50%;
       background: #ef4444; /* Vivid red */
-      border: 2px solid rgba(255, 255, 255, 0.35);
+      border: 3px solid rgba(255, 255, 255, 0.35);
       box-shadow: 0 8px 25px rgba(239, 68, 68, 0.45);
       cursor: pointer;
       display: flex;
@@ -584,8 +584,8 @@
     }
     
     .reaction-trigger-btn img {
-      width: 28px;
-      height: 28px;
+      width: 64px;
+      height: 64px;
       object-fit: contain;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
     }
@@ -593,14 +593,14 @@
     /* Floating Reaction Selector Menu */
     .reaction-menu {
       position: absolute;
-      bottom: 70px;
+      bottom: 110px;
       left: 0;
       background: rgba(15, 23, 42, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border-radius: 30px;
-      padding: 8px 16px;
+      border-radius: 45px;
+      padding: 10px 20px;
       display: flex;
       gap: 16px;
       box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
@@ -633,8 +633,8 @@
     }
     
     .reaction-menu-item img {
-      width: 34px;
-      height: 34px;
+      width: 64px;
+      height: 64px;
       object-fit: contain;
     }
     
@@ -698,7 +698,7 @@
       width: 42px;
       height: 42px;
       object-fit: contain;
-      animation: floatUpFade 1.6s cubic-bezier(0.08, 0.8, 0.25, 1) forwards;
+      animation: floatUpFade 2s cubic-bezier(0.08, 0.8, 0.25, 1) forwards;
     }
     
     @keyframes floatUpFade {
@@ -706,9 +706,12 @@
         transform: translate3d(0, 0, 0) scale(0.4) rotate(0deg);
         opacity: 0;
       }
-      10% {
+      15% {
         opacity: 1;
         transform: translate3d(var(--x-mid), var(--y-mid), 0) scale(1.12) rotate(var(--rot-mid));
+      }
+      65% {
+        opacity: 0.95;
       }
       100% {
         transform: translate3d(var(--x-end), var(--y-end), 0) scale(0.55) rotate(var(--rot-end));
@@ -799,32 +802,32 @@
       }
       
       .story-dot {
-        width: 150px;
-        height: 150px;
+        width: 64px;
+        height: 64px;
       }
       
       .dot-inner {
-        width: 138px;
-        height: 138px;
-        font-size: 20px;
+        width: 56px;
+        height: 56px;
+        font-size: 14px;
         overflow: hidden;
       }
       
       .dot-inner img {
-        width: 196px;
-        height: 196px;
+        width: 80px;
+        height: 80px;
       }
       
       .progress-ring {
-        width: 162px;
-        height: 162px;
-        top: -6px;
-        left: -6px;
+        width: 72px;
+        height: 72px;
+        top: -4px;
+        left: -4px;
       }
       
       .progress-ring__circle {
-        stroke-dasharray: 452; /* 2 * PI * 72 */
-        stroke-dashoffset: 452;
+        stroke-dasharray: 194.78; /* 2 * PI * 31 */
+        stroke-dashoffset: 194.78;
       }
       
       .exit-btn {
@@ -889,23 +892,75 @@
       }
       
       .reaction-trigger-btn {
-        width: 48px;
-        height: 48px;
+        width: 96px;
+        height: 96px;
       }
       
       .reaction-trigger-btn img {
-        width: 24px;
-        height: 24px;
+        width: 64px;
+        height: 64px;
       }
       
       .reaction-menu {
-        bottom: 60px;
+        bottom: 110px;
       }
       
       .pause-overlay {
         top: 85px;
         left: 16px;
       }
+    }
+
+    /* 3D Cube Transitions */
+    .cube-viewport {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      perspective: 1600px;
+      -webkit-perspective: 1600px;
+      perspective-origin: 50% 50%;
+      -webkit-perspective-origin: 50% 50%;
+      overflow: hidden;
+      z-index: 10;
+    }
+    
+    .cube-box {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+      transform: translateZ(-50vw) rotateY(0deg);
+      -webkit-transform: translateZ(-50vw) rotateY(0deg);
+    }
+    
+    .cube-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    
+    .cube-face.active {
+      transform: rotateY(0deg) translateZ(50vw);
+      -webkit-transform: rotateY(0deg) translateZ(50vw);
+    }
+    
+    .cube-face.sibling-right {
+      transform: rotateY(90deg) translateZ(50vw);
+      -webkit-transform: rotateY(90deg) translateZ(50vw);
+    }
+    
+    .cube-face.sibling-left {
+      transform: rotateY(-90deg) translateZ(50vw);
+      -webkit-transform: rotateY(-90deg) translateZ(50vw);
     }
   </style>
 </head>
@@ -958,75 +1013,109 @@
       </svg>
     </button>
 
-    <!-- Center Slide Image Display -->
-    <section class="image-area" id="imageArea">
-      <div class="image-preloader visible" id="imagePreloader">
-        <div class="spinner"></div>
-      </div>
-      
-      <!-- Main Content Image -->
-      <img id="storyImage" class="story-image" src="" alt="Hikaye Görseli">
-      
-      <!-- Tap Navigators -->
-      <div class="tap-target tap-left" id="tapLeft"></div>
-      <div class="tap-target tap-right" id="tapRight"></div>
-      
-      <!-- Pause Notification Indicator -->
-      <div class="pause-overlay" id="pauseOverlay">
-        <div class="pause-icon-dots">
-          <div class="pause-icon-dot"></div>
-          <div class="pause-icon-dot"></div>
-        </div>
-        <span>Durduruldu</span>
-      </div>
-
-      <!-- Floating Reactions Component -->
-      <div class="reaction-container" id="reactionContainer">
-        <button class="reaction-trigger-btn" id="reactionTriggerBtn" aria-label="Tepki Gönder" title="Tepki Gönder">
-          <img src="assets/kupa.png" alt="Reaction Icon" id="activeReactionImg">
-        </button>
+    <!-- 3D Cube Viewport -->
+    <div class="cube-viewport" id="cubeViewport">
+      <div class="cube-box" id="cubeBox">
         
-        <div class="reaction-menu" id="reactionMenu">
-          <button class="reaction-menu-item" data-reaction="kupa" title="Kupa (🏆)">
-            <img src="assets/kupa.png" alt="Kupa">
-          </button>
-          <button class="reaction-menu-item" data-reaction="kalp" title="Kalp (❤️)">
-            <img src="assets/kalp.png" alt="Kalp">
-          </button>
-          <button class="reaction-menu-item" data-reaction="begen" title="Beğen (👍)">
-            <img src="assets/begen.png" alt="Beğen">
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Floating Glassmorphic Details Card -->
-    <section class="content-area" id="contentArea">
-      <div class="content-card-inner">
-        <div class="story-body" id="storyBody">
-          <div class="badge-container">
-            <span class="badge" id="categoryBadge">DUYURU</span>
+        <!-- Active Face -->
+        <div class="cube-face active" id="faceActive">
+          <div class="image-area">
+            <div class="image-preloader visible">
+              <div class="spinner"></div>
+            </div>
+            <img class="story-image" src="" alt="Hikaye Görseli">
           </div>
-          <h1 class="story-title" id="storyTitle">Yükleniyor...</h1>
-          <p class="story-text" id="storyText">İçerikler yüklenirken lütfen bekleyin.</p>
+          <div class="content-area">
+            <div class="content-card-inner">
+              <div class="story-body">
+                <div class="badge-container">
+                  <span class="badge">DUYURU</span>
+                </div>
+                <h1 class="story-title">Yükleniyor...</h1>
+                <p class="story-text">İçerikler yüklenirken lütfen bekleyin.</p>
+              </div>
+              <footer class="branding-container">
+                <div class="branding-text">
+                  <div class="branding-org">KAYSERİ İL MİLLİ EĞİTİM MÜDÜRLÜĞÜ</div>
+                  <div class="branding-sub">AR-GE Eğitim Projeleri</div>
+                </div>
+                <img class="branding-logo" src="assets/arge.png" alt="Logo">
+              </footer>
+            </div>
+            <!-- Sparkle bottom-right decoration -->
+            <svg class="sparkle sparkle-br" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.2">
+              <path d="M12 3v18M3 12h18M12 3l3 4.5L12 12l-3-4.5zM12 12l3 4.5-3 4.5-3-4.5z" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
         </div>
 
-        <!-- Bottom Organization Branding -->
-        <footer class="branding-container">
-          <div class="branding-text">
-            <div class="branding-org" id="brandingOrg">KAYSERİ İL MİLLİ EĞİTİM MÜDÜRLÜĞÜ</div>
-            <div class="branding-sub">AR-GE Eğitim Projeleri</div>
+        <!-- Sibling Face (used for transitions) -->
+        <div class="cube-face" id="faceSibling" style="display: none;">
+          <div class="image-area">
+            <div class="image-preloader">
+              <div class="spinner"></div>
+            </div>
+            <img class="story-image" src="" alt="Hikaye Görseli">
           </div>
-          <img class="branding-logo" id="brandingLogo" src="assets/arge.png" alt="Logo">
-        </footer>
+          <div class="content-area">
+            <div class="content-card-inner">
+              <div class="story-body">
+                <div class="badge-container">
+                  <span class="badge"></span>
+                </div>
+                <h1 class="story-title"></h1>
+                <p class="story-text"></p>
+              </div>
+              <footer class="branding-container">
+                <div class="branding-text">
+                  <div class="branding-org">KAYSERİ İL MİLLİ EĞİTİM MÜDÜRLÜĞÜ</div>
+                  <div class="branding-sub">AR-GE Eğitim Projeleri</div>
+                </div>
+                <img class="branding-logo" src="assets/arge.png" alt="Logo">
+              </footer>
+            </div>
+            <!-- Sparkle bottom-right decoration -->
+            <svg class="sparkle sparkle-br" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.2">
+              <path d="M12 3v18M3 12h18M12 3l3 4.5L12 12l-3-4.5zM12 12l3 4.5-3 4.5-3-4.5z" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+
       </div>
-      
-      <!-- Sparkle bottom-right decoration -->
-      <svg class="sparkle sparkle-br" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.2">
-        <path d="M12 3v18M3 12h18M12 3l3 4.5L12 12l-3-4.5zM12 12l3 4.5-3 4.5-3-4.5z" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </section>
+    </div>
+
+    <!-- Tap Navigators (Fixed outside the 3D Viewport) -->
+    <div class="tap-target tap-left" id="tapLeft"></div>
+    <div class="tap-target tap-right" id="tapRight"></div>
     
+    <!-- Pause Notification Indicator -->
+    <div class="pause-overlay" id="pauseOverlay">
+      <div class="pause-icon-dots">
+        <div class="pause-icon-dot"></div>
+        <div class="pause-icon-dot"></div>
+      </div>
+      <span>Durduruldu</span>
+    </div>
+
+    <!-- Floating Reactions Component -->
+    <div class="reaction-container" id="reactionContainer">
+      <button class="reaction-trigger-btn" id="reactionTriggerBtn" aria-label="Tepki Gönder" title="Tepki Gönder">
+        <img src="assets/kupa.png" alt="Reaction Icon" id="activeReactionImg">
+      </button>
+      
+      <div class="reaction-menu" id="reactionMenu">
+        <button class="reaction-menu-item" data-reaction="kupa" title="Kupa (🏆)">
+          <img src="assets/kupa.png" alt="Kupa">
+        </button>
+        <button class="reaction-menu-item" data-reaction="kalp" title="Kalp (❤️)">
+          <img src="assets/kalp.png" alt="Kalp">
+        </button>
+        <button class="reaction-menu-item" data-reaction="begen" title="Beğen (👍)">
+          <img src="assets/begen.png" alt="Beğen">
+        </button>
+      </div>
+    </div>
+
   </main>
 
   <!-- Kiosk Closed Screen Overlay -->
@@ -1048,8 +1137,9 @@
                       "baslik": "Stem Ödül Töreni",
                       "metin": "🎉 Büyük Başarı! Kayseri'deki teknoloji meraklısı öğrencilerimiz, hazırladıkları yenilikçi kodlama projesiyle Avrupa'daki rakiplerini geride bırakarak eTwinning Avrupa Ödülü'nü kazandı! 🏆\n\nGeleceğin yazılımcıları, bu harika başarıyla hem okulumuzu hem de ülkemizi gururlandırdı. 🇹🇷 Bilim ve teknolojiyle büyüyen tüm öğrencilerimizi ve emeği geçen öğretmenlerimizi yürekten tebrik ediyoruz! 🚀👏İçerik Metnini buraya yazın ",
                       "gosterim_suresi_sn": 10,
-                      "olusturma_tarihi": "2026-06-08T15:23:19",
-                      "gecerlilik_suresi_saat": 72
+                      "olusturma_tarihi": "2026-06-19T15:23:19",
+                      "gecerlilik_suresi_saat": 72,
+                      "ses_url": ""
                 },
                 {
                       "icerik_turu": "Duyuru",
@@ -1058,8 +1148,9 @@
                       "baslik": "Etwinning başvuruları başladı",
                       "metin": "🎉 Büyük Başarı! Kayseri'deki teknoloji meraklısı öğrencilerimiz, hazırladıkları yenilikçi kodlama projesiyle Avrupa'daki rakiplerini geride bırakarak eTwinning Avrupa Ödülü'nü kazandı! 🏆\n🚀👏 \nGeleceğin yazılımcıları, bu harika başarıyla hem okulumuzu hem de ülkemizi gururlandırdı. \n🚀👏 🚀👏 🚀👏 🚀👏 \n🇹🇷 Bilim ve teknolojiyle büyüyen tüm öğrencilerimizi ve emeği geçen öğretmenlerimizi yürekten tebrik ediyoruz! ",
                       "gosterim_suresi_sn": 10,
-                      "olusturma_tarihi": "2026-06-08T15:25:03",
-                      "gecerlilik_suresi_saat": 24
+                      "olusturma_tarihi": "2026-06-19T15:25:03",
+                      "gecerlilik_suresi_saat": 24,
+                      "ses_url": ""
                 },
                 {
                       "icerik_turu": "Duyuru",
@@ -1068,18 +1159,20 @@
                       "baslik": "Robotik Kodlama Yarışması",
                       "metin": "🚀👏 🎉 Büyük Başarı! Kayseri'deki teknoloji meraklısı öğrencilerimiz, hazırladıkları yenilikçi kodlama projesiyle Avrupa'daki rakiplerini geride bırakarak eTwinning Avrupa Ödülü'nü kazandı! 🏆\n🚀👏🚀👏🚀👏🚀👏🚀👏\nGeleceğin yazılımcıları, bu harika başarıyla hem okulumuzu hem de ülkemizi gururlandırdı. 🇹🇷 Bilim ve teknolojiyle büyüyen tüm öğrencilerimizi ve emeği geçen öğretmenlerimizi yürekten tebrik ediyoruz! 🚀👏",
                       "gosterim_suresi_sn": 5,
-                      "olusturma_tarihi": "2026-06-08T15:25:47",
-                      "gecerlilik_suresi_saat": 24
+                      "olusturma_tarihi": "2026-06-19T15:25:47",
+                      "gecerlilik_suresi_saat": 24,
+                      "ses_url": ""
                 },
                 {
-                      "icerik_turu": "Duyuru",
+                      "icerik_turu": "Haber",
                       "resim_url": "04.jpg",
                       "video_url": "",
-                      "baslik": "Henüz Başlık Yok",
+                      "baslik": "Henüz Başlık Yok ",
                       "metin": "İçerik Metnini buraya yazın ",
                       "gosterim_suresi_sn": 5,
-                      "olusturma_tarihi": "2026-06-08T15:01:38",
-                      "gecerlilik_suresi_saat": 24
+                      "olusturma_tarihi": "2026-06-19T15:01:38",
+                      "gecerlilik_suresi_saat": 24,
+                      "ses_url": "4.mp3"
                 }
           ]
     };
@@ -1093,20 +1186,16 @@
     let lastTime = 0;
     let animationFrameId = null;
     let isMobile = false;
+    let isTransitioning = false;
     
     // DOM Elements Cache
     const ambientBg = document.getElementById('ambientBg');
-    const storyImage = document.getElementById('storyImage');
-    const imagePreloader = document.getElementById('imagePreloader');
-    const categoryBadge = document.getElementById('categoryBadge');
-    const storyTitle = document.getElementById('storyTitle');
-    const storyText = document.getElementById('storyText');
-    const brandingOrg = document.getElementById('brandingOrg');
-    const brandingLogo = document.getElementById('brandingLogo');
+    const cubeBox = document.getElementById('cubeBox');
+    let faceActive = document.getElementById('faceActive');
+    let faceSibling = document.getElementById('faceSibling');
     const navDots = document.getElementById('navDots');
     const progressSegments = document.getElementById('progressSegments');
     const pauseOverlay = document.getElementById('pauseOverlay');
-    const storyBody = document.getElementById('storyBody');
     
     // Buttons
     const prevBtn = document.getElementById('prevBtn');
@@ -1126,6 +1215,9 @@
     const reactionMenu = document.getElementById('reactionMenu');
     const activeReactionImg = document.getElementById('activeReactionImg');
 
+    // Audio Player State
+    let currentAudio = null;
+
     // Helper functions for content paths
     function formatImagePath(path) {
       if (!path) return '';
@@ -1134,6 +1226,47 @@
         formatted += '.png'; // Map JSON 01.jpg -> local resimler/01.jpg.png
       }
       return formatted;
+    }
+
+    function formatAudioPath(path) {
+      if (!path || path === "yok" || path.toLowerCase() === "yok") return '';
+      return path.startsWith('ses/') ? path : 'ses/' + path;
+    }
+
+    function playStoryAudio(item) {
+      stopStoryAudio();
+      
+      const audioPath = formatAudioPath(item.ses_url);
+      if (!audioPath) return;
+      
+      currentAudio = new Audio(audioPath);
+      
+      if (isPaused) return;
+      
+      currentAudio.play().catch(err => {
+        console.warn("Autoplay blocked or audio playback failed:", err);
+      });
+    }
+
+    function stopStoryAudio() {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+      }
+    }
+
+    function pauseStoryAudio() {
+      if (currentAudio && !currentAudio.paused) {
+        currentAudio.pause();
+      }
+    }
+
+    function resumeStoryAudio() {
+      if (currentAudio && currentAudio.paused && !isPaused) {
+        currentAudio.play().catch(err => {
+          console.warn("Audio resume failed:", err);
+        });
+      }
     }
 
     function getCategoryIcon(type) {
@@ -1191,6 +1324,7 @@
     // Display a beautiful overlay screen if there are no active/unexpired stories
     function showEmptyState() {
       isPaused = true;
+      stopStoryAudio();
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = null;
@@ -1240,7 +1374,7 @@
         isPaused = false;
         checkIsMobile();
         buildNavigation();
-        loadStory(0);
+        loadStoryDirectly(0);
         
         // Start timeline loop if not running
         if (!animationFrameId) {
@@ -1273,7 +1407,7 @@
       
       checkIsMobile();
       buildNavigation();
-      loadStory(0);
+      loadStoryDirectly(0);
       
       // Start main timer loop
       lastTime = performance.now();
@@ -1308,9 +1442,9 @@
         dot.setAttribute('aria-label', `${index + 1}. hikayeye git`);
         
         // Progress Ring SVG radius and circumference based on layout size
-        const radius = 72;
-        const circ = 2 * Math.PI * radius; // 452.4
-        const size = 162;
+        const radius = 31;
+        const circ = 2 * Math.PI * radius; // 194.78
+        const size = 72;
         const center = size / 2;
         
         dot.innerHTML = `
@@ -1340,8 +1474,41 @@
       });
     }
 
-    // Populate active story items and trigger transitions
-    function loadStory(idx) {
+    // Dynamic Populator for faces
+    function populateFace(faceEl, item) {
+      const imgEl = faceEl.querySelector('.story-image');
+      const preloaderEl = faceEl.querySelector('.image-preloader');
+      const badgeEl = faceEl.querySelector('.badge');
+      const titleEl = faceEl.querySelector('.story-title');
+      const textEl = faceEl.querySelector('.story-text');
+      const bodyEl = faceEl.querySelector('.story-body');
+      
+      const newImgSrc = formatImagePath(item.resim_url);
+      imgEl.src = newImgSrc;
+      
+      preloaderEl.classList.add('visible');
+      imgEl.classList.remove('loaded');
+      
+      imgEl.onload = () => {
+        preloaderEl.classList.remove('visible');
+        imgEl.classList.add('loaded');
+      };
+      
+      imgEl.onerror = () => {
+        preloaderEl.classList.remove('visible');
+        imgEl.src = '';
+      };
+      
+      badgeEl.textContent = item.icerik_turu;
+      badgeEl.className = 'badge ' + item.icerik_turu.toLowerCase()
+        .replace('ı','i').replace('ö','o').replace('ü','u').replace('ş','s').replace('ç','c').replace('ğ','g');
+      
+      titleEl.textContent = item.baslik;
+      textEl.innerHTML = item.metin;
+    }
+
+    // Populate active story directly without transition
+    function loadStoryDirectly(idx) {
       currentIdx = idx;
       const item = stories[currentIdx];
       
@@ -1352,57 +1519,26 @@
       // Clear trigger menu
       reactionMenu.classList.remove('open');
       
-      // Toggle transition animation in text card
-      storyBody.classList.add('switching');
+      faceActive.style.display = 'block';
+      faceSibling.style.display = 'none';
+      faceActive.className = 'cube-face active';
       
-      // Load Image
-      imagePreloader.classList.add('visible');
-      storyImage.classList.remove('loaded');
+      populateFace(faceActive, item);
       
       const newImgSrc = formatImagePath(item.resim_url);
-      storyImage.src = newImgSrc;
       ambientBg.style.backgroundImage = `url('${newImgSrc}')`;
       
-      storyImage.onload = () => {
-        imagePreloader.classList.remove('visible');
-        storyImage.classList.add('loaded');
-      };
-      
-      // Fallback in case image is missing
-      storyImage.onerror = () => {
-        imagePreloader.classList.remove('visible');
-        storyImage.src = '';
-        ambientBg.style.backgroundImage = 'none';
-      };
-
-      // Preload the next story image
       if (stories.length > 1) {
         const nextIdx = (idx + 1) % stories.length;
         const nextImg = new Image();
         nextImg.src = formatImagePath(stories[nextIdx].resim_url);
       }
-
-      // Set Text Data (with 150ms delay for smooth fading)
-      setTimeout(() => {
-        // Set content badge type & styling class
-        categoryBadge.textContent = item.icerik_turu;
-        categoryBadge.className = 'badge ' + item.icerik_turu.toLowerCase()
-          .replace('ı','i').replace('ö','o').replace('ü','u').replace('ş','s').replace('ç','c').replace('ğ','g');
-        
-        storyTitle.textContent = item.baslik;
-        storyText.innerHTML = item.metin;
-        
-        storyBody.classList.remove('switching');
-      }, 150);
-
-      // Pick a random reaction image and change icon
+      
       const reactionImages = ['assets/kupa.png', 'assets/kalp.png', 'assets/begen.png'];
       const randomImg = reactionImages[Math.floor(Math.random() * reactionImages.length)];
       activeReactionImg.src = randomImg;
-
-      // Automatically trigger explosion and button pop effect with a slight delay
+      
       setTimeout(() => {
-        // Only trigger if this story is still the active one
         if (stories[currentIdx] === item) {
           reactionTriggerBtn.classList.add('pop-animate');
           setTimeout(() => {
@@ -1411,8 +1547,94 @@
           triggerReactionExplosion(randomImg);
         }
       }, 300);
-
+      
       updateNavigationUI();
+      playStoryAudio(item);
+    }
+
+    // Default loadStory forwards to direct setup
+    function loadStory(idx) {
+      loadStoryDirectly(idx);
+    }
+
+    // 3D Cube Slide Transition
+    function changeStory(idx, direction) {
+      if (isTransitioning) return;
+      if (idx === currentIdx) return;
+      
+      if (stories.length <= 1) {
+        loadStoryDirectly(idx);
+        return;
+      }
+      
+      isTransitioning = true;
+      const item = stories[idx];
+      
+      reactionMenu.classList.remove('open');
+      
+      faceSibling.style.display = 'block';
+      populateFace(faceSibling, item);
+      
+      if (direction === 'next') {
+        faceSibling.className = 'cube-face sibling-right';
+        cubeBox.offsetHeight; // force reflow
+        cubeBox.style.transition = 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+        cubeBox.style.transform = 'translateZ(-50vw) rotateY(-90deg)';
+      } else {
+        faceSibling.className = 'cube-face sibling-left';
+        cubeBox.offsetHeight; // force reflow
+        cubeBox.style.transition = 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+        cubeBox.style.transform = 'translateZ(-50vw) rotateY(90deg)';
+      }
+      
+      const newImgSrc = formatImagePath(item.resim_url);
+      ambientBg.style.backgroundImage = `url('${newImgSrc}')`;
+      
+      const nextIdx = (idx + 1) % stories.length;
+      const nextImg = new Image();
+      nextImg.src = formatImagePath(stories[nextIdx].resim_url);
+      
+      playStoryAudio(item);
+      
+      const reactionImages = ['assets/kupa.png', 'assets/kalp.png', 'assets/begen.png'];
+      const randomImg = reactionImages[Math.floor(Math.random() * reactionImages.length)];
+      activeReactionImg.src = randomImg;
+      
+      setTimeout(() => {
+        if (stories[idx] === item) {
+          reactionTriggerBtn.classList.add('pop-animate');
+          setTimeout(() => {
+            reactionTriggerBtn.classList.remove('pop-animate');
+          }, 300);
+          triggerReactionExplosion(randomImg);
+        }
+      }, 500);
+      
+      setTimeout(() => {
+        faceSibling.className = 'cube-face active';
+        faceActive.className = 'cube-face';
+        faceActive.style.display = 'none';
+        
+        cubeBox.style.transition = 'none';
+        cubeBox.style.transform = 'translateZ(-50vw) rotateY(0deg)';
+        cubeBox.offsetHeight; // force reflow
+        cubeBox.style.transition = '';
+        
+        const tempId = faceActive.id;
+        faceActive.id = faceSibling.id;
+        faceSibling.id = tempId;
+        
+        const temp = faceActive;
+        faceActive = faceSibling;
+        faceSibling = temp;
+        
+        currentIdx = idx;
+        timerDuration = (item.gosterim_suresi_sn || 5) * 1000;
+        timerElapsed = 0;
+        isTransitioning = false;
+        
+        updateNavigationUI();
+      }, 800);
     }
 
     // Updates classes on buttons, active ring styles, segments
@@ -1422,14 +1644,13 @@
       
       dots.forEach((dot, index) => {
         const ring = dot.querySelector('.progress-ring__circle');
-        const radius = 72;
+        const radius = 31;
         const circ = 2 * Math.PI * radius;
         
         if (index === currentIdx) {
           dot.classList.add('active');
         } else {
           dot.classList.remove('active');
-          // Fill completed dots, empty pending dots
           if (index < currentIdx) {
             ring.style.strokeDashoffset = '0';
             segmentFills[index].style.width = '100%';
@@ -1441,27 +1662,23 @@
       });
     }
 
-    // Jump to selected index instantly
     function jumpToStory(idx) {
       if (idx < 0) idx = stories.length - 1;
       if (idx >= stories.length) idx = 0;
-      loadStory(idx);
+      if (idx === currentIdx) return;
+      
+      const direction = (idx > currentIdx) ? 'next' : 'prev';
+      changeStory(idx, direction);
     }
 
     function nextStory() {
-      if (currentIdx === stories.length - 1) {
-        jumpToStory(0);
-      } else {
-        jumpToStory(currentIdx + 1);
-      }
+      const nextIdx = (currentIdx === stories.length - 1) ? 0 : currentIdx + 1;
+      changeStory(nextIdx, 'next');
     }
 
     function prevStory() {
-      if (currentIdx === 0) {
-        jumpToStory(stories.length - 1);
-      } else {
-        jumpToStory(currentIdx - 1);
-      }
+      const prevIdx = (currentIdx === 0) ? stories.length - 1 : currentIdx - 1;
+      changeStory(prevIdx, 'prev');
     }
 
     // Main Timer Loop (using requestAnimationFrame)
@@ -1492,7 +1709,7 @@
       const activeDot = document.querySelector('.story-dot.active');
       if (activeDot) {
         const ring = activeDot.querySelector('.progress-ring__circle');
-        const radius = 72;
+        const radius = 31;
         const circ = 2 * Math.PI * radius;
         const offset = circ - (percent * circ);
         ring.style.strokeDashoffset = offset;
@@ -1508,6 +1725,7 @@
     // Soft Close Overlay controls
     function closeViewer() {
       isPaused = true;
+      stopStoryAudio();
       pauseOverlay.classList.remove('visible');
       closedScreen.classList.add('active');
       
@@ -1594,7 +1812,7 @@
         particle.style.setProperty('--rot-mid', `${rotMid}deg`);
         particle.style.setProperty('--rot-end', `${rotEnd}deg`);
         
-        const duration = 1.1 + Math.random() * 0.6;
+        const duration = 2.0;
         particle.style.animationDuration = `${duration}s`;
         
         document.body.appendChild(particle);
@@ -1609,12 +1827,15 @@
     function pauseTimeline() {
       isPaused = true;
       pauseOverlay.classList.add('visible');
+      pauseStoryAudio();
     }
 
+    // Resume Timeline
     function resumeTimeline() {
       isPaused = false;
       pauseOverlay.classList.remove('visible');
       lastTime = performance.now();
+      resumeStoryAudio();
     }
 
     // Attach listeners for Tap and Hold
@@ -1673,6 +1894,22 @@
     exitBtn.addEventListener('click', closeViewer);
     restartBtn.addEventListener('click', restartViewer);
     window.addEventListener('resize', handleResize);
+
+    // Global interaction listener to unlock audio playback if autoplay was initially blocked
+    const unlockAudio = () => {
+      if (currentAudio && currentAudio.paused && !isPaused) {
+        currentAudio.play().catch(err => {
+          console.warn("User interaction failed to unlock audio:", err);
+        });
+      }
+      // Remove listeners after first interaction
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+      document.removeEventListener('keydown', unlockAudio);
+    };
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
+    document.addEventListener('keydown', unlockAudio);
 
     // Initial load
     init();

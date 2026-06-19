@@ -11,9 +11,84 @@ import http.server
 import socketserver
 import threading
 import tkinter as tk
+import json
 
 # Ayarlar
 KAYNAK_URL = "http://localhost:8000/kaynak.zip"
+SETTINGS_DIR = os.path.join(os.path.expanduser("~"), ".config", "YaparizBasaririz")
+SETTINGS_PATH = os.path.join(SETTINGS_DIR, "kiosk_settings.json")
+
+def check_mute_status():
+    """
+    Sessizlik ayarını kontrol eder.
+    Sessiz mod aktifse (ve süresi dolmadıysa) programı çalıştırmadan kapatır.
+    """
+    if os.path.exists(SETTINGS_PATH):
+        try:
+            with open(SETTINGS_PATH, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                mute_until = data.get("mute_until", 0)
+                current_time = time.time()
+                if current_time < mute_until:
+                    remaining_seconds = mute_until - current_time
+                    hours = int(remaining_seconds // 3600)
+                    minutes = int((remaining_seconds % 3600) // 60)
+                    print(f"Sessiz mod etkin: Sessizlik süresinin bitmesine {hours} saat {minutes} dakika var. Program çalışmadan sonlandırılıyor.")
+                    sys.exit(0)
+        except SystemExit:
+            sys.exit(0)
+        except Exception as e:
+            print(f"Sessiz mod kontrolü sırasında hata oluştu: {e}", file=sys.stderr)
+
+class ToggleSwitch(tk.Canvas):
+    """
+    Tkinter Canvas tabanlı modern, premium görünümlü bir açma/kapama (Toggle) anahtarı.
+    """
+    def __init__(self, parent, width=55, height=26, bg_color="#57606f", active_color="#2ed573", knob_color="#ffffff", initial_state=False, command=None, *args, **kwargs):
+        super().__init__(parent, width=width, height=height, bg=parent["bg"], bd=0, highlightthickness=0, *args, **kwargs)
+        self.width = width
+        self.height = height
+        self.bg_color = bg_color
+        self.active_color = active_color
+        self.knob_color = knob_color
+        self.state = initial_state
+        self.command = command
+        
+        self.bind("<Button-1>", self.toggle)
+        self.draw()
+
+    def draw(self):
+        self.delete("all")
+        radius = self.height / 2
+        color = self.active_color if self.state else self.bg_color
+        
+        # Rounded rectangle background
+        self.create_oval(0, 0, self.height, self.height, fill=color, outline="")
+        self.create_oval(self.width - self.height, 0, self.width, self.height, fill=color, outline="")
+        self.create_rectangle(radius, 0, self.width - radius, self.height, fill=color, outline="")
+        
+        # Knob
+        padding = 3
+        knob_radius = radius - padding
+        if self.state:
+            knob_x = self.width - radius
+        else:
+            knob_x = radius
+            
+        self.create_oval(
+            knob_x - knob_radius,
+            padding,
+            knob_x + knob_radius,
+            self.height - padding,
+            fill=self.knob_color,
+            outline=""
+        )
+
+    def toggle(self, event=None):
+        self.state = not self.state
+        self.draw()
+        if self.command:
+            self.command(self.state)
 
 class ThreadedHTTPServer:
     """
@@ -66,9 +141,9 @@ def open_in_kiosk(url):
         pass
 
     browsers = [
-        ("google-chrome", [f"--user-data-dir={chrome_profile}", "--no-first-run", "--no-default-browser-check", "--kiosk", url]),
-        ("chromium-browser", [f"--user-data-dir={chrome_profile}", "--no-first-run", "--no-default-browser-check", "--kiosk", url]),
-        ("chromium", [f"--user-data-dir={chrome_profile}", "--no-first-run", "--no-default-browser-check", "--kiosk", url]),
+        ("google-chrome", [f"--user-data-dir={chrome_profile}", "--no-first-run", "--no-default-browser-check", "--autoplay-policy=no-user-gesture-required", "--kiosk", url]),
+        ("chromium-browser", [f"--user-data-dir={chrome_profile}", "--no-first-run", "--no-default-browser-check", "--autoplay-policy=no-user-gesture-required", "--kiosk", url]),
+        ("chromium", [f"--user-data-dir={chrome_profile}", "--no-first-run", "--no-default-browser-check", "--autoplay-policy=no-user-gesture-required", "--kiosk", url]),
         ("firefox", ["--kiosk", url])
     ]
     
@@ -84,12 +159,12 @@ def open_in_kiosk(url):
 
 def show_control_panel(browser_proc):
     """
-    Ekranın sağ üst köşesinde her zaman üstte duran küçük bir çıkış butonu oluşturur.
-    Kullanıcının kiosk modundan kolayca çıkmasını sağlar.
+    Ekranın sağ üst köşesinde her zaman üstte duran çıkış ve ayarlar butonlarını oluşturur.
+    Kullanıcının kiosk modundan kolayca çıkmasını veya ayarları yönetmesini sağlar.
     Dokunmatik ekranlar için:
     - Sürükleme (drag & drop) desteği sunar, böylece ekranın istenen yerine taşınabilir.
-    - Sürükleme hareketi yaparken yanlışlıkla kapanmaması için akıllı hareket algılaması vardır.
-    - Tek dokunuşla (tıklama) anında kapanır.
+    - Sürükleme hareketi yaparken yanlışlıkla kapanmaması veya ayarların açılmaması için akıllı hareket algılaması vardır.
+    - Tek dokunuşla (tıklama) eylemleri anında tetikler.
     """
     try:
         root = tk.Tk()
@@ -117,8 +192,8 @@ def show_control_panel(browser_proc):
     # Her zaman en üstte tut
     root.attributes('-topmost', True)
     
-    # Dokunmatik ekran için daha büyük hedef alanı (180x60)
-    window_width = 180
+    # Dokunmatik ekran için daha büyük hedef alanı (240x60)
+    window_width = 240
     window_height = 60
     try:
         screen_width = root.winfo_screenwidth()
@@ -129,9 +204,6 @@ def show_control_panel(browser_proc):
         x, y = 1000, 25
         
     root.geometry(f"{window_width}x{window_height}+{x}+{y}")
-    
-    # Sadece "KAPAT" olarak ayarlandı
-    button_text = "KAPAT"
     
     # Sürükleme yapılıp yapılmadığını izlemek için bayrak (flag)
     root.was_dragged = False
@@ -149,10 +221,151 @@ def show_control_panel(browser_proc):
                     pass
         root.destroy()
 
-    # Modern buton tasarımı (Premium aesthetics)
+    def open_settings_popup():
+        popup = tk.Toplevel(root)
+        popup.title("Ayarlar")
+        popup.overrideredirect(True)
+        popup.attributes('-topmost', True)
+        popup.configure(bg="#1e272e")
+        popup.config(highlightbackground="#57606f", highlightthickness=1)
+        
+        popup_width = 340
+        popup_height = 200
+        
+        try:
+            screen_width = popup.winfo_screenwidth()
+            screen_height = popup.winfo_screenheight()
+            px = (screen_width - popup_width) // 2
+            py = (screen_height - popup_height) // 2
+        except Exception:
+            px, py = 500, 300
+        popup.geometry(f"{popup_width}x{popup_height}+{px}+{py}")
+        popup.grab_set()
+
+        title_label = tk.Label(
+            popup,
+            text="Kiosk Ayarları",
+            font=("Helvetica", 14, "bold"),
+            bg="#1e272e",
+            fg="#ffffff"
+        )
+        title_label.pack(pady=(15, 10))
+
+        row_frame = tk.Frame(popup, bg="#1e272e")
+        row_frame.pack(fill=tk.X, padx=25, pady=10)
+
+        option_label = tk.Label(
+            row_frame,
+            text="12 Saat Sessize Al",
+            font=("Helvetica", 12),
+            bg="#1e272e",
+            fg="#dfe4ea"
+        )
+        option_label.pack(side=tk.LEFT)
+
+        initial_state = False
+        try:
+            if os.path.exists(SETTINGS_PATH):
+                with open(SETTINGS_PATH, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    mute_until = data.get("mute_until", 0)
+                    if time.time() < mute_until:
+                        initial_state = True
+        except Exception:
+            pass
+
+        popup.shutdown_timer = None
+
+        def on_toggle(state):
+            if state:
+                mute_duration = 12 * 3600
+                mute_until = time.time() + mute_duration
+                try:
+                    os.makedirs(SETTINGS_DIR, exist_ok=True)
+                    with open(SETTINGS_PATH, 'w', encoding='utf-8') as f:
+                        json.dump({"mute_until": mute_until}, f, ensure_ascii=False, indent=4)
+                    
+                    info_label.config(text="Sessiz mod etkinleştirildi.\nProgram 3 saniye içinde kapanacak...", fg="#2ed573")
+                    
+                    def delayed_exit():
+                        on_exit()
+                    
+                    popup.shutdown_timer = popup.after(3000, delayed_exit)
+                except Exception as err:
+                    info_label.config(text=f"Hata: {err}", fg="#ff4757")
+            else:
+                if popup.shutdown_timer:
+                    popup.after_cancel(popup.shutdown_timer)
+                    popup.shutdown_timer = None
+                try:
+                    os.makedirs(SETTINGS_DIR, exist_ok=True)
+                    with open(SETTINGS_PATH, 'w', encoding='utf-8') as f:
+                        json.dump({"mute_until": 0}, f, ensure_ascii=False, indent=4)
+                    info_label.config(text="Sessiz mod iptal edildi.", fg="#ffffff")
+                except Exception as err:
+                    info_label.config(text=f"Hata: {err}", fg="#ff4757")
+
+        toggle = ToggleSwitch(row_frame, width=55, height=26, initial_state=initial_state, command=on_toggle)
+        toggle.pack(side=tk.RIGHT)
+
+        info_label = tk.Label(
+            popup,
+            text="Programı sessiz moda alarak 12 saat kapanmasını sağlayabilirsiniz.",
+            font=("Helvetica", 9),
+            bg="#1e272e",
+            fg="#a4b0be",
+            justify=tk.CENTER,
+            wraplength=300
+        )
+        info_label.pack(pady=(5, 10))
+
+        def close_popup():
+            if popup.shutdown_timer:
+                popup.after_cancel(popup.shutdown_timer)
+            popup.destroy()
+
+        close_btn = tk.Button(
+            popup,
+            text="KAPAT",
+            bg="#2f3542",
+            fg="white",
+            font=("Helvetica", 10, "bold"),
+            bd=0,
+            activebackground="#57606f",
+            activeforeground="white",
+            relief=tk.FLAT,
+            cursor="hand2",
+            command=close_popup
+        )
+        close_btn.pack(side=tk.BOTTOM, fill=tk.X, padx=25, pady=(0, 15))
+
+        def on_close_btn_enter(e):
+            close_btn.config(bg="#57606f")
+        def on_close_btn_leave(e):
+            close_btn.config(bg="#2f3542")
+        close_btn.bind("<Enter>", on_close_btn_enter)
+        close_btn.bind("<Leave>", on_close_btn_leave)
+
+    # Modern buton tasarımları (Premium aesthetics)
+    # Settings Button
+    settings_btn = tk.Button(
+        root,
+        text="⚙",
+        bg="#2f3542",
+        fg="white",
+        font=("Helvetica", 16),
+        bd=0,
+        activebackground="#57606f",
+        activeforeground="white",
+        relief=tk.FLAT,
+        cursor="hand2"
+    )
+    settings_btn.place(x=0, y=0, width=60, height=60)
+
+    # Close Button
     button = tk.Button(
         root,
-        text=button_text,
+        text="KAPAT",
         bg="#ff4757",       # Canlı mercan kırmızısı
         fg="white",
         font=("Helvetica", 11, "bold"),
@@ -162,45 +375,57 @@ def show_control_panel(browser_proc):
         relief=tk.FLAT,
         cursor="hand2"
     )
-    button.pack(fill=tk.BOTH, expand=True)
+    button.place(x=60, y=0, width=180, height=60)
 
-    # Hover (üzerine gelme) efekti
+    # Hover (üzerine gelme) efektleri
     def on_enter(e):
         button.config(bg="#ff6b81")
-        
     def on_leave(e):
         button.config(bg="#ff4757")
-        
     button.bind("<Enter>", on_enter)
     button.bind("<Leave>", on_leave)
 
-    # Sürükleme (Drag & Drop) mekanizması:
-    # Kullanıcı parmağıyla veya fareyle butonu tutup ekranda istediği yere taşıyabilir
+    def on_settings_enter(e):
+        settings_btn.config(bg="#57606f")
+    def on_settings_leave(e):
+        settings_btn.config(bg="#2f3542")
+    settings_btn.bind("<Enter>", on_settings_enter)
+    settings_btn.bind("<Leave>", on_settings_leave)
+
+    # Sürükleme (Drag & Drop) mekanizması
     def start_drag(event):
-        root._drag_start_x = event.x
-        root._drag_start_y = event.y
-        root.was_dragged = False # Her dokunmada başlangıçta sıfırla
+        root._drag_start_x = event.x_root
+        root._drag_start_y = event.y_root
+        root.was_dragged = False
 
     def drag(event):
-        deltax = event.x - root._drag_start_x
-        deltay = event.y - root._drag_start_y
+        deltax = event.x_root - root._drag_start_x
+        deltay = event.y_root - root._drag_start_y
         
-        # Eğer hareket 3 pikselden fazlaysa sürükleme olarak algıla
         if abs(deltax) > 3 or abs(deltay) > 3:
             root.was_dragged = True
             x = root.winfo_x() + deltax
             y = root.winfo_y() + deltay
             root.geometry(f"+{x}+{y}")
+            root._drag_start_x = event.x_root
+            root._drag_start_y = event.y_root
 
-    def on_release(event):
-        # Eğer sürükleme yapılmadıysa (sadece dokunup çekildiyse), hemen kapat
+    def on_close_release(event):
         if not root.was_dragged:
             on_exit()
 
-    # Olayları butona bağlama
+    def on_settings_release(event):
+        if not root.was_dragged:
+            open_settings_popup()
+
+    # Olayları butonlara bağlama
     button.bind("<Button-1>", start_drag)
     button.bind("<B1-Motion>", drag)
-    button.bind("<ButtonRelease-1>", on_release)
+    button.bind("<ButtonRelease-1>", on_close_release)
+
+    settings_btn.bind("<Button-1>", start_drag)
+    settings_btn.bind("<B1-Motion>", drag)
+    settings_btn.bind("<ButtonRelease-1>", on_settings_release)
 
     # Tarayıcının kendiliğinden kapanıp kapanmadığını izleyen döngü
     def check_browser():
@@ -220,6 +445,7 @@ def show_control_panel(browser_proc):
         on_exit()
 
 def main():
+    check_mute_status()
     server = None
     try:
         # Sabit geçici dizin ismi kullanarak önceki çalışmalardan kalan dosyaları temizleyebiliyoruz
